@@ -16,12 +16,11 @@ module.exports = {
   lintOnSave: process.env.NODE_ENV === 'development',
   productionSourceMap: false,
   devServer: {
-    open: true,
     overlay: {
       warnings: true,
       errors: true
     },
-    proxy: 'http://www.lumen.test'
+    proxy: process.env.PROXY_URL
   },
   configureWebpack: {
     name: name,

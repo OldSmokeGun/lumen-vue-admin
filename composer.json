@@ -47,6 +47,19 @@
             "php artisan ide-helper:generate",
             "php artisan ide-helper:meta",
             "php artisan ide-helper:model -N"
+        ],
+        "fronts-install": [
+            "cd fronts && npm install"
+        ],
+        "fronts-build": [
+            "npm run build:prod --prefix=fronts"
+        ],
+        "develop": [
+            "npm run dev --prefix=fronts"
+        ],
+        "production": [
+            "composer dump-autoload --optimize",
+            "composer fronts-build"
         ]
     }
 }
