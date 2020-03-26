@@ -37,7 +37,7 @@ router.beforeEach(async(to, from, next) => {
           router.addRoutes(addRoutes)
           next({ ...to, replace: true })
         } catch (error) {
-          if (Object.keys(error).length === 0) {
+          if (!(error instanceof Error)) {
             errorAlert(to, next)
           }
           NProgress.done()

@@ -273,7 +273,7 @@ class AdminController extends Controller
             return HttpResponse::failedResponse('上传的文件无效');
         }
 
-        $savePath = 'public/upload/admin/avatar';
+        $savePath = 'upload/admin/avatar';
 
         $path = $request->avatar->store($savePath);
 

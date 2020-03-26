@@ -6,7 +6,7 @@ class PermissionsSeeder extends Seeder
 {
     public function run()
     {
-        \App\Models\Auth\Permission::create([
+        App\Models\Permission::create([
             'identification' => '/system',
             'title'          => '系统管理',
             'icon'           => 'system',
@@ -61,7 +61,7 @@ class PermissionsSeeder extends Seeder
             ]
         ]);
 
-        \App\Models\Auth\Permission::create([
+        App\Models\Permission::create([
             'identification' => '/api/admins',
             'title'          => '管理员列表',
             'icon'           => '',
@@ -140,7 +140,7 @@ class PermissionsSeeder extends Seeder
                 ],
             ]
         ]);
-        \App\Models\Auth\Permission::create([
+        App\Models\Permission::create([
             'identification' => '/api/roles',
             'title'          => '角色列表',
             'icon'           => '',
@@ -208,7 +208,7 @@ class PermissionsSeeder extends Seeder
                 ],
             ]
         ]);
-        \App\Models\Auth\Permission::create([
+        App\Models\Permission::create([
             'identification' => '/api/permissions',
             'title'          => '权限列表',
             'icon'           => '',
