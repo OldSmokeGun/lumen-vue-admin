@@ -4,7 +4,10 @@
  * @var $router \Laravel\Lumen\Routing\Router
  */
 
-$router->group(['prefix' => 'api'], function () use ( $router ) {
+$router->group([
+    'prefix'     => 'api',
+    'middleware' => ['auth', 'permission']
+], function () use ( $router ) {
     $router->post('/login', 'LoginController@login');
     $router->post('/logout', 'LoginController@logout');
 
