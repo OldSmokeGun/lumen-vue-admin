@@ -110,7 +110,7 @@
           <template slot-scope="scope">
             <el-button
               v-permission="'/api/admins/edit'"
-              class="disabled-text-button-forbidden"
+              class="action-bar-text-button-forbidden"
               type="text"
               icon="el-icon-unlock"
               size="mini"
@@ -119,7 +119,7 @@
             >{{ scope.row.status ? '禁用' : '启用' }}</el-button>
             <el-button
               v-permission="'/api/admins/update'"
-              class="disabled-text-button-edit"
+              class="action-bar-text-button-edit"
               type="text"
               icon="el-icon-edit"
               size="mini"
@@ -135,7 +135,7 @@
               <el-button
                 slot="reference"
                 v-permission="'/api/admins/delete'"
-                class="disabled-text-button-delete"
+                class="action-bar-text-button-delete"
                 type="text"
                 :loading="scope.row.deleteBtnLoading"
                 icon="el-icon-delete"
@@ -553,5 +553,9 @@ export default {
   margin-right: 0;
   margin-bottom: 0;
   width: 100%;
+}
+
+.action-bar-text-button-delete {
+  margin-left: 10px;
 }
 </style>
