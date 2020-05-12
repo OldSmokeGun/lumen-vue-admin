@@ -28,7 +28,12 @@
           :loading="search.searchBtnLoding"
           @click="handleSearchList"
         >查询</el-button>
-        <el-button type="primary" icon="el-icon-circle-plus-outline" @click="handleAdd">添加</el-button>
+        <el-button
+          v-permission="'/api/permissions/create'"
+          type="primary"
+          icon="el-icon-circle-plus-outline"
+          @click="handleAdd"
+        >添加</el-button>
       </el-form-item>
     </el-form>
 
@@ -69,38 +74,46 @@
                 >{{ scope.row.display ? '显示' : '隐藏' }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" align="center" width="250">
+            <el-table-column
+              v-if="$permission(['/api/permissions/edit', '/api/permissions/update', '/api/permissions/delete'])"
+              label="操作"
+              align="center"
+            >
               <template slot-scope="scope">
-                <el-button-group>
+                <el-button
+                  v-permission="'/api/permissions/edit'"
+                  class="disabled-text-button-forbidden"
+                  type="text"
+                  icon="el-icon-unlock"
+                  size="mini"
+                  :loading="scope.row.editStatusBtnLoading"
+                  @click="handleEditStatus(scope)"
+                >{{ scope.row.status ? '禁用' : '启用' }}</el-button>
+                <el-button
+                  v-permission="'/api/permissions/update'"
+                  class="disabled-text-button-edit"
+                  type="text"
+                  icon="el-icon-edit"
+                  size="mini"
+                  @click="handleUpdate(scope)"
+                >编辑</el-button>
+                <el-popconfirm
+                  title="确定要删除吗？"
+                  placement="top"
+                  cancel-button-type="primary"
+                  confirm-button-type="text"
+                  @onConfirm="handleDelete(scope)"
+                >
                   <el-button
-                    type="info"
-                    icon="el-icon-unlock"
+                    slot="reference"
+                    v-permission="'/api/permissions/delete'"
+                    class="disabled-text-button-delete"
+                    type="text"
+                    :loading="scope.row.deleteBtnLoading"
+                    icon="el-icon-delete"
                     size="mini"
-                    :loading="scope.row.editStatusBtnLoading"
-                    @click="handleEditStatus(scope)"
-                  >{{ scope.row.status ? '禁用' : '启用' }}</el-button>
-                  <el-button
-                    type="warning"
-                    icon="el-icon-edit"
-                    size="mini"
-                    @click="handleUpdate(scope)"
-                  >编辑</el-button>
-                  <el-popconfirm
-                    title="确定要删除吗？"
-                    placement="top"
-                    cancel-button-type="primary"
-                    confirm-button-type="text"
-                    @onConfirm="handleDelete(scope)"
-                  >
-                    <el-button
-                      slot="reference"
-                      type="danger"
-                      :loading="scope.row.deleteBtnLoading"
-                      icon="el-icon-delete"
-                      size="mini"
-                    >删除</el-button>
-                  </el-popconfirm>
-                </el-button-group>
+                  >删除</el-button>
+                </el-popconfirm>
               </template>
             </el-table-column>
           </el-table>
@@ -128,38 +141,46 @@
                 <el-tag :type="scope.row.status | statusFilter">{{ scope.row.status ? '启用' : '禁用' }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" align="center" width="250">
+            <el-table-column
+              v-if="$permission(['/api/permissions/edit', '/api/permissions/update', '/api/permissions/delete'])"
+              label="操作"
+              align="center"
+            >
               <template slot-scope="scope">
-                <el-button-group>
+                <el-button
+                  v-permission="'/api/permissions/edit'"
+                  class="disabled-text-button-forbidden"
+                  type="text"
+                  icon="el-icon-unlock"
+                  size="mini"
+                  :loading="scope.row.editStatusBtnLoading"
+                  @click="handleEditStatus(scope)"
+                >{{ scope.row.status ? '禁用' : '启用' }}</el-button>
+                <el-button
+                  v-permission="'/api/permissions/update'"
+                  class="disabled-text-button-edit"
+                  type="text"
+                  icon="el-icon-edit"
+                  size="mini"
+                  @click="handleUpdate(scope)"
+                >编辑</el-button>
+                <el-popconfirm
+                  title="确定要删除吗？"
+                  placement="top"
+                  cancel-button-type="primary"
+                  confirm-button-type="text"
+                  @onConfirm="handleDelete(scope)"
+                >
                   <el-button
-                    type="info"
-                    icon="el-icon-unlock"
+                    slot="reference"
+                    v-permission="'/api/permissions/delete'"
+                    class="disabled-text-button-delete"
+                    type="text"
+                    :loading="scope.row.deleteBtnLoading"
+                    icon="el-icon-delete"
                     size="mini"
-                    :loading="scope.row.editStatusBtnLoading"
-                    @click="handleEditStatus(scope)"
-                  >{{ scope.row.status ? '禁用' : '启用' }}</el-button>
-                  <el-button
-                    type="warning"
-                    icon="el-icon-edit"
-                    size="mini"
-                    @click="handleUpdate(scope)"
-                  >编辑</el-button>
-                  <el-popconfirm
-                    title="确定要删除吗？"
-                    placement="top"
-                    cancel-button-type="primary"
-                    confirm-button-type="text"
-                    @onConfirm="handleDelete(scope)"
-                  >
-                    <el-button
-                      slot="reference"
-                      type="danger"
-                      :loading="scope.row.deleteBtnLoading"
-                      icon="el-icon-delete"
-                      size="mini"
-                    >删除</el-button>
-                  </el-popconfirm>
-                </el-button-group>
+                  >删除</el-button>
+                </el-popconfirm>
               </template>
             </el-table-column>
           </el-table>
@@ -434,7 +455,7 @@ export default {
 
       getPermissionTrees(this.form.fields.type).then(response => {
         this.form[formDataType].treeData = response.data.data
-        this.$nextTick(function() {
+        this.$nextTick(() => {
           this.$refs[treeType].setCurrentKey(0)
         })
       })
@@ -455,7 +476,7 @@ export default {
       })
 
       this.form[formDataType].formIsVisible = true
-      this.$nextTick(function() {
+      this.$nextTick(() => {
         this.$refs[formType].clearValidate()
       })
     },
@@ -466,7 +487,7 @@ export default {
 
       getPermissionTrees(this.form.fields.type).then(response => {
         this.form[formDataType].treeData = response.data.data
-        this.$nextTick(function() {
+        this.$nextTick(() => {
           this.$refs[treeType].setCurrentKey(Number(scope.row.parent_id))
           this.form[formDataType].defaultExpandedNodeId = scope.row.parent_id ? Number(scope.row.parent_id) : 0
         })
@@ -488,7 +509,7 @@ export default {
       })
 
       this.form[formDataType].formIsVisible = true
-      this.$nextTick(function() {
+      this.$nextTick(() => {
         this.$refs[formType].clearValidate()
       })
     },

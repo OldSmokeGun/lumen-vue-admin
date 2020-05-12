@@ -6,14 +6,15 @@ import App from './App'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 
-import './directives'
-
 import 'normalize.css/normalize.css'
 import './styles/index.scss'
 import './icons'
 import './router/guard'
 
+import Permission from '@/plugins/permission'
+
 Vue.use(ElementUI)
+Vue.use(Permission)
 
 Vue.config.productionTip = false
 

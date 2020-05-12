@@ -13,3 +13,5 @@ _ide_helper_models.php
 /public/static
 /public/storage
 /resources/views/app.blade.php
+
+node_modules/
