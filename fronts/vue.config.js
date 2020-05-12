@@ -11,7 +11,7 @@ const name = defaultSettings.title || 'vue Admin Template'
 module.exports = {
   publicPath: '/',
   outputDir: '../public/static',
-  assetsDir: '../static',
+  assetsDir: process.env.NODE_ENV === 'development' ? './' : '../static',
   indexPath: '../../resources/views/app.blade.php',
   lintOnSave: process.env.NODE_ENV === 'development',
   productionSourceMap: false,
