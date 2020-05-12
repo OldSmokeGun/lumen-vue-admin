@@ -1,4 +1,4 @@
-import store from '@/js/store'
+import store from '@/store'
 
 export default {
   install: function(Vue, options) {
