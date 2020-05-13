@@ -234,7 +234,7 @@
 </template>
 
 <script>
-import { getList, createAdmin, updateAdmin, editAdmin, deleteAdmin, getRoles } from '@/api/admin'
+import { getList, createAdmin, updateAdmin, editAdmin, deleteAdmin, getRoles } from '@/api/admins'
 import Pagination from '@/components/Pagination'
 import { getToken } from '@/utils/cookie'
 import DialogForm from '@/views/components/DialogForm'

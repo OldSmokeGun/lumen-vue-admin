@@ -328,7 +328,7 @@
 </template>
 
 <script>
-import { getList, createPermission, updatePermission, editPermission, deletePermission, getPermissionTrees } from '@/api/permission'
+import { getList, createPermission, updatePermission, editPermission, deletePermission, getPermissionTrees } from '@/api/permissions'
 import svgIconNames from '@/utils/get-svg'
 import { isExternal } from '@/utils/validate'
 import DialogForm from '@/views/components/DialogForm'

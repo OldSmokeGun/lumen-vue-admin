@@ -165,7 +165,7 @@
 </template>
 
 <script>
-import { getList, createRole, updateRole, editRole, deleteRole, getPermissions } from '@/api/role'
+import { getList, createRole, updateRole, editRole, deleteRole, getPermissions } from '@/api/roles'
 import Pagination from '@/components/Pagination'
 import DialogForm from '@/views/components/DialogForm'
 

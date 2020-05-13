@@ -14,7 +14,7 @@ const errorAlert = (to, next) => {
     showClose: false,
     type: 'warning'
   }).then(async() => {
-    await store.dispatch('admin/resetInfo')
+    await store.dispatch('admins/resetInfo')
     await store.dispatch('permissions/resetRoutes')
     next(`/login?redirect=${to.path}`)
   })
@@ -32,7 +32,7 @@ router.beforeEach(async(to, from, next) => {
         next()
       } else {
         try {
-          const adminInfo = await store.dispatch('admin/getInfo')
+          const adminInfo = await store.dispatch('admins/getInfo')
           const addRoutes = await store.dispatch('permissions/setRoutes', adminInfo.permission_maps)
           router.addRoutes(addRoutes)
           next({ ...to, replace: true })

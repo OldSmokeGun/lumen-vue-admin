@@ -1,5 +1,5 @@
 import { getToken, setToken, removeToken } from '@/utils/cookie'
-import { getAdminInfo } from '@/api/admin'
+import { getAdminInfo } from '@/api/admins'
 
 const defaultState = () => {
   return {

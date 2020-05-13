@@ -35,7 +35,7 @@
 import { mapGetters } from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
-import { logout } from '@/api/admin'
+import { logout } from '@/api/admins'
 import { getToken } from '@/utils/cookie'
 
 export default {
@@ -57,7 +57,7 @@ export default {
       logout(getToken())
         .then(async(response) => {
           if (response.data.code === 'OK') {
-            await this.$store.dispatch('admin/resetInfo')
+            await this.$store.dispatch('admins/resetInfo')
             await this.$store.dispatch('permissions/resetRoutes')
             this.$router.push(`/login?redirect=${this.$route.fullPath}`)
           }
