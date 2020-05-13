@@ -14,7 +14,7 @@ export function logout(token) {
   }))
 }
 
-export function getList(search) {
+export function getAdmins(search) {
   return http.get('/admins', {
     params: search
   })

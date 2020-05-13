@@ -1,7 +1,7 @@
 import http from '@/utils/http'
 import qs from 'qs'
 
-export function getList(search) {
+export function getRoles(search) {
   return http.get('/roles', {
     params: search
   })

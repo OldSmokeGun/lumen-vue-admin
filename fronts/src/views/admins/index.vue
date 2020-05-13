@@ -234,7 +234,7 @@
 </template>
 
 <script>
-import { getList, createAdmin, updateAdmin, editAdmin, deleteAdmin, getRoles } from '@/api/admins'
+import { getAdmins, createAdmin, updateAdmin, editAdmin, deleteAdmin, getRoles } from '@/api/admins'
 import Pagination from '@/components/Pagination'
 import { getToken } from '@/utils/cookie'
 import DialogForm from '@/views/components/DialogForm'
@@ -313,7 +313,7 @@ export default {
     handleList() {
       this.table.tableListLoading = true
 
-      getList(this.search.fields).then(response => {
+      getAdmins(this.search.fields).then(response => {
         this.table.tableListLoading = false
         this.search.searchBtnLoding = false
         this.table.tableList = response.data.data.data

@@ -328,7 +328,7 @@
 </template>
 
 <script>
-import { getList, createPermission, updatePermission, editPermission, deletePermission, getPermissionTrees } from '@/api/permissions'
+import { getPermissions, createPermission, updatePermission, editPermission, deletePermission, getPermissionTrees } from '@/api/permissions'
 import svgIconNames from '@/utils/get-svg'
 import { isExternal } from '@/utils/validate'
 import DialogForm from '@/views/components/DialogForm'
@@ -439,7 +439,7 @@ export default {
       const tableType = this.search.fields.type ? 'otherType' : 'routeType'
 
       this.table[tableType].tableListLoading = true
-      getList(this.search.fields).then(response => {
+      getPermissions(this.search.fields).then(response => {
         this.table[tableType].tableListLoading = false
         this.search.searchBtnLoding = false
         this.table[tableType].tableList = response.data.data
