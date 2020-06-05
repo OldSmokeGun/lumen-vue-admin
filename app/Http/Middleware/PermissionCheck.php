@@ -30,6 +30,11 @@ class PermissionCheck
         {
             $token = $request->header('Authorization');
             $admin = AdminModel::where(['token' => $token])->first();
+            
+            if ( !$admin )
+            {
+                return HttpResponse::failedResponse(HttpResponseCode::LOGIN_INVALID_CODE_MESSAGE, HttpResponseCode::LOGIN_INVALID_CODE);
+            }
 
             if ( (int) $admin->id !== 1 )
             {
