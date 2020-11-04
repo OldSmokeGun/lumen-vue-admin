@@ -22,7 +22,7 @@ class StorageLink extends Command
         $target = base_path('storage/app');
         $link   = base_path('public/storage');
 
-        if ( !windows_os() ) {
+        if (!windows_os()) {
             return symlink($target, $link);
         }
 

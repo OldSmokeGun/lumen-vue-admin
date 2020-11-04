@@ -17,44 +17,38 @@ class AuthCheck
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
+     * @param \Illuminate\Http\Request $request
+     * @param \Closure $next
      * @return mixed
      */
     public function handle($request, Closure $next)
     {
-        $pathInfo  = $request->getPathInfo();
+        $pathInfo = $request->getPathInfo();
 
-        if ( !in_array($pathInfo, $this->whiteList) )
-        {
+        if (!in_array($pathInfo, $this->whiteList)) {
             $token = $request->header('Authorization');
 
-            if (!$token)
-            {
+            if (!$token) {
                 return HttpResponse::failedResponse(HttpResponseCode::LOGIN_INVALID_CODE_MESSAGE, HttpResponseCode::LOGIN_INVALID_CODE);
             }
 
             $status = Jwt::validate($token);
 
-            if ( (int) $status !== 0 )
-            {
+            if ((int)$status !== 0) {
                 return HttpResponse::failedResponse(HttpResponseCode::LOGIN_INVALID_CODE_MESSAGE, HttpResponseCode::LOGIN_INVALID_CODE);
             }
 
             $admin = (new AdminModel())->findByToken($token);
 
-            if ( !$admin )
-            {
+            if (!$admin) {
                 return HttpResponse::failedResponse(HttpResponseCode::LOGIN_INVALID_CODE_MESSAGE, HttpResponseCode::LOGIN_INVALID_CODE);
             }
 
-            if ( !$admin->status )
-            {
+            if (!$admin->status) {
                 return HttpResponse::failedResponse(HttpResponseCode::LOGIN_INVALID_CODE_MESSAGE, HttpResponseCode::LOGIN_INVALID_CODE);
             }
 
-            if ( (string) $admin->token !== (string) $token )
-            {
+            if ((string)$admin->token !== (string)$token) {
                 return HttpResponse::failedResponse(HttpResponseCode::LOGIN_INVALID_CODE_MESSAGE, HttpResponseCode::LOGIN_INVALID_CODE);
             }
         }

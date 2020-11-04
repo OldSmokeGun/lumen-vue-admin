@@ -66,7 +66,7 @@ class HttpResponse
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function response(string $code, string $message, $data = [] )
+    public function response(string $code, string $message, $data = [])
     {
         $response = [
             'code'    => $code,

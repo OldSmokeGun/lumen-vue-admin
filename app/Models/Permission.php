@@ -93,19 +93,19 @@ class Permission extends Model
 
     public function createPermission(array $data): bool
     {
-        $this->identification = $data['identification'];
-        $this->title          = $data['title'];
-        $this->icon           = $data['icon'];
-        $this->redirect       = $data['redirect'];
-        $this->description    = $data['description'];
-        $this->type           = $data['type'];
-        $this->sort           = $data['sort'];
-        $this->status         = $data['status'];
-        $this->display        = $data['display'];
-
         DB::beginTransaction();
 
         try {
+            $this->identification = $data['identification'];
+            $this->title          = $data['title'];
+            $this->icon           = $data['icon'];
+            $this->redirect       = $data['redirect'];
+            $this->description    = $data['description'];
+            $this->type           = $data['type'];
+            $this->sort           = $data['sort'];
+            $this->status         = $data['status'];
+            $this->display        = $data['display'];
+
             if ($data['parent_id']) {
                 $parent = $this->find($data['parent_id']);
 

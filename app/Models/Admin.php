@@ -278,6 +278,7 @@ class Admin extends Model
 
         try {
             if (!$this->delete()) throw new \Exception();
+
             $this->roles()->detach();
 
             DB::commit();
