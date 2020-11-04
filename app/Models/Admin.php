@@ -92,32 +92,39 @@ class Admin extends Model
             ->idSort()
             ->paginate($search['limit']);
 
-        foreach ( $admins as $admin )
-        {
-            $admin->roles = $admin->roles()->select(['roles.id','name'])->get()->toArray();
+        foreach ($admins as $admin) {
+            $admin->roles = $admin->roles()->select(['roles.id', 'name'])->get()->toArray();
         }
 
         return $admins->toArray();
     }
 
-    public function getAdminPermissionsByToken(string $token, array $fields): ?array
+    public function getAdminPermissionsByToken(string $token): ?array
     {
+        $fields = [
+            'id',
+            'username',
+            'nickname',
+            'avatar',
+            'email',
+            'last_login_time',
+            'last_login_ip',
+        ];
+
         $admin = $this->select($fields)->where(['token' => $token])->first();
 
-        if ( !$admin ) return [];
+        if (!$admin) return [];
 
         $permissionModel = new PermissionModel();
         $permissionTable = $permissionModel->getTable();
 
-        if ( (int) $admin->id === 1 )
-        {
+        if ((int)$admin->id === 1) {
             $permissionQuery = $permissionModel
                 ->select([
                     "{$permissionTable}.id",
                     "{$permissionTable}.identification",
                     "{$permissionTable}.title",
                     "{$permissionTable}.icon",
-                    "{$permissionTable}.component",
                     "{$permissionTable}.redirect",
                     "{$permissionTable}.parent_id",
                     "{$permissionTable}.lft",
@@ -133,7 +140,7 @@ class Admin extends Model
 
             $admin->permission_maps = [
                 'routes' => $routePermissions,
-                'maps' => $otherPermissions
+                'maps'   => $otherPermissions
             ];
 
             return $admin->toArray();
@@ -154,7 +161,6 @@ class Admin extends Model
                 "{$permissionTable}.identification",
                 "{$permissionTable}.title",
                 "{$permissionTable}.icon",
-                "{$permissionTable}.component",
                 "{$permissionTable}.redirect",
                 "{$permissionTable}.parent_id",
                 "{$permissionTable}.lft",
@@ -179,7 +185,7 @@ class Admin extends Model
 
         $admin->permission_maps = [
             'routes' => $routePermissions,
-            'maps' => $otherPermissions
+            'maps'   => $otherPermissions
         ];
 
         return $admin->toArray();
@@ -214,101 +220,70 @@ class Admin extends Model
         return $result ? true : false;
     }
 
-    public function createAdmin(array $admin): bool
+    public function createAdmin(array $data): bool
     {
         DB::beginTransaction();
 
-        try
-        {
-            $this->username = $admin['username'];
-            $this->nickname = $admin['nickname'];
-            $this->password = Hash::make($admin['password']);
-            $this->avatar   = $admin['avatar'];
-            $this->email    = $admin['email'];
+        try {
+            $this->username = $data['username'];
+            $this->nickname = $data['nickname'];
+            $this->password = Hash::make($data['password']);
+            $this->avatar   = $data['avatar'];
+            $this->email    = $data['email'];
             $this->token    = '';
-            $this->status   = $admin['status'];
+            $this->status   = $data['status'];
 
-            if ( !$this->save() ) throw new \Exception();
+            if (!$this->save()) throw new \Exception();
 
-            if ( $admin['roles'] )
-            {
-                $adminRoles = [];
-
-                foreach ( $admin['roles'] as $role )
-                {
-                    $adminRoles[] = ['admin_id' => $this->id, 'role_id' => $role, 'create_time' => time()];
-                }
-
-                if ( !AdminRole::insert($adminRoles) ) throw new \Exception();
-            }
+            $this->roles()->attach(array_fill_keys($data['roles'], ['create_time' => time()]));
 
             DB::commit();
             return true;
 
-        } catch ( \Exception $exception ) {
+        } catch (\Exception $exception) {
 
             DB::rollBack();
             return false;
         }
     }
 
-    public function updateAdmin(array $admin): bool
-    {
-        $model = $this->find($admin['id']);
-
-        DB::beginTransaction();
-
-        try
-        {
-            $model->username = $admin['username'];
-            $model->nickname = $admin['nickname'];
-            $model->avatar   = $admin['avatar'];
-            $model->email    = $admin['email'];
-            $model->status   = $admin['status'];
-
-            $admin['password'] && $model->password = Hash::make($admin['password']);
-
-            if ( !$model->save() ) throw new \Exception();
-
-            AdminRole::where(['admin_id' => $admin['id']])->delete();
-
-            if ( $admin['roles'] )
-            {
-                $adminRoles = [];
-
-                foreach ( $admin['roles'] as $role )
-                {
-                    $adminRoles[] = ['admin_id' => $admin['id'], 'role_id' => $role, 'update_time' => time()];
-                }
-
-                if ( !AdminRole::insert($adminRoles)) throw new \Exception();
-            }
-
-            DB::commit();
-            return true;
-
-        } catch ( \Exception $exception ) {
-
-            DB::rollBack();
-            return false;
-        }
-    }
-
-    public function deleteAdmin(int $id): bool
+    public function updateAdmin(array $data): bool
     {
         DB::beginTransaction();
 
-        try
-        {
-            AdminRole::where(['admin_id' => $id])->delete();
-            $adminResult = $this->destroy($id);
+        try {
+            isset($data['username']) && $this->username = $data['username'];
+            isset($data['nickname']) && $this->nickname = $data['nickname'];
+            isset($data['avatar']) && $this->avatar = $data['avatar'];
+            isset($data['email']) && $this->email = $data['email'];
+            isset($data['status']) && $this->status = $data['status'];
 
-            if ( !$adminResult ) throw new \Exception();
+            if (!$this->save()) throw new \Exception();
+
+            isset($data['roles']) && $this->roles()->sync(array_fill_keys($data['roles'], ['update_time' => time()]));
 
             DB::commit();
             return true;
 
-        } catch ( \Exception $exception ) {
+        } catch (\Exception $exception) {
+
+            DB::rollBack();
+            return false;
+        }
+    }
+
+    public function deleteAdmin(): bool
+    {
+        DB::beginTransaction();
+
+        try {
+            if (!$this->delete()) throw new \Exception();
+            $this->roles()->detach();
+
+            DB::commit();
+            return true;
+
+        } catch (\Exception $exception) {
 
             DB::rollBack();
             return false;
@@ -316,21 +291,7 @@ class Admin extends Model
 
     }
 
-    public function editAdmin(array $fields): bool
-    {
-        $model = $this->find($fields['id']);
-
-        unset($fields['id']);
-
-        foreach ( $fields as $fieldKey => $fieldValue )
-        {
-            $model->$fieldKey = $fieldValue;
-        }
-
-        return  $model->save();
-    }
-
-    public function getRoles():? array
+    public function getRoles(): ?array
     {
         return Role::idSort()->get()->toArray();
     }
@@ -345,23 +306,34 @@ class Admin extends Model
         return $this->where(['token' => $token])->first();
     }
 
-    public function setLastLogin(Admin $admin, array $lostLoginInfo): bool
+    public function setLastLogin(array $lostLoginInfo): bool
     {
-        $admin->last_login_time = $lostLoginInfo['last_login_time'];
-        $admin->last_login_ip   = $lostLoginInfo['last_login_ip'];
-        return $admin->save();
+        $this->last_login_time = $lostLoginInfo['last_login_time'];
+        $this->last_login_ip   = $lostLoginInfo['last_login_ip'];
+        return $this->save();
     }
 
-    public function setToken(Admin $admin, string $token): bool
+    public function setToken(string $token): bool
     {
-        $admin->token = $token;
-        return $admin->save();
+        $this->token = $token;
+        return $this->save();
     }
 
-    public function removeToken(Admin $admin): bool
+    public function removeToken(): bool
     {
-        $admin->token = '';
-        return $admin->save();
+        $this->token = '';
+        return $this->save();
     }
 
+    public function resetPassword(): bool
+    {
+        $this->password = Hash::make('123456');;
+        return $this->save();
+    }
+
+    public function updatePassword($password): bool
+    {
+        $this->password = Hash::make($password);;
+        return $this->save();
+    }
 }

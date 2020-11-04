@@ -4,9 +4,9 @@
     <sidebar class="sidebar-container" />
     <div class="main-container">
       <div :class="{'fixed-header':fixedHeader}">
-        <navbar />
+        <navbar @resetPassword="handleResetPassword" />
       </div>
-      <app-main />
+      <app-main ref="app" />
     </div>
   </div>
 </template>
@@ -45,6 +45,9 @@ export default {
   methods: {
     handleClickOutside() {
       this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
+    },
+    handleResetPassword() {
+      this.$refs.app.handleResetPassword()
     }
   }
 }

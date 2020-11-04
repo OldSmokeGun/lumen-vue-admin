@@ -56,7 +56,7 @@
         >
           <template slot-scope="scope">
             <el-button
-              v-permission="'/api/roles/edit'"
+              v-permission="'/api/roles/update'"
               class="action-bar-text-button-forbidden"
               type="text"
               icon="el-icon-unlock"
@@ -130,8 +130,8 @@
           </el-form-item>
           <el-form-item label="路由权限">
             <el-tree
-              ref="routeTypeTree"
-              :data="form.treeData.routes"
+              ref="routeTree"
+              :data="form.treeData"
               :highlight-current="true"
               :accordion="true"
               :props="{ label: 'tree_title' }"
@@ -140,22 +140,7 @@
               style="margin-top: 7px;"
               node-key="id"
               show-checkbox
-              @check="handleRouteTypeTreeChecked"
-            />
-          </el-form-item>
-          <el-form-item label="其他权限">
-            <el-tree
-              ref="otherTypeTree"
-              :data="form.treeData.others"
-              :highlight-current="true"
-              :accordion="true"
-              :props="{ label: 'tree_title' }"
-              :default-expanded-keys="form.fields.permissions"
-              :check-strictly="true"
-              style="margin-top: 7px;"
-              node-key="id"
-              show-checkbox
-              @check="handleOtherTypeTreeChecked"
+              @check="handleRouteTreeChecked"
             />
           </el-form-item>
         </el-form>
@@ -165,7 +150,7 @@
 </template>
 
 <script>
-import { getRoles, createRole, updateRole, editRole, deleteRole, getPermissions } from '@/api/roles'
+import { getRoles, createRole, updateRole, deleteRole, getCreateRoleFormData, getUpdateRoleFormData } from '@/api/roles'
 import Pagination from '@/components/Pagination'
 import DialogForm from '@/views/components/DialogForm'
 
@@ -213,10 +198,7 @@ export default {
             { required: true, trigger: 'blur', message: '请填写描述' }
           ]
         },
-        treeData: {
-          routes: [],
-          others: []
-        }
+        treeData: []
       },
       pagination: {
         page: 1,
@@ -245,8 +227,8 @@ export default {
       })
     },
     handleAdd() {
-      getPermissions().then(response => {
-        this.form.treeData = { ...response.data.data }
+      getCreateRoleFormData().then(response => {
+        this.form.treeData = [...response.data.data]
       })
 
       delete this.form.fields.id
@@ -260,13 +242,12 @@ export default {
       this.form.formIsVisible = true
       this.$nextTick(() => {
         this.$refs.form.clearValidate()
-        this.$refs.routeTypeTree.setCheckedKeys([])
-        this.$refs.otherTypeTree.setCheckedKeys([])
+        this.$refs.routeTree.setCheckedKeys([])
       })
     },
     handleUpdate(scope) {
-      getPermissions().then(response => {
-        this.form.treeData = { ...response.data.data }
+      getUpdateRoleFormData(scope.row.id).then(response => {
+        this.form.treeData = [...response.data.data]
       })
 
       const permissions = []
@@ -285,8 +266,7 @@ export default {
       this.form.formIsVisible = true
       this.$nextTick(() => {
         this.$refs.form.clearValidate()
-        this.$refs.routeTypeTree.setCheckedKeys(permissions)
-        this.$refs.otherTypeTree.setCheckedKeys(permissions)
+        this.$refs.routeTree.setCheckedKeys(permissions)
       })
     },
     handleDelete(scope) {
@@ -351,7 +331,7 @@ export default {
         status: Number(!scope.row.status)
       }
 
-      editRole(params).then(response => {
+      updateRole(params).then(response => {
         this.$delete(scope.row, 'editStatusBtnLoading')
         if (response.data.code === 'OK') {
           scope.row.status = Number(!scope.row.status)
@@ -361,13 +341,9 @@ export default {
         this.$delete(scope.row, 'editStatusBtnLoading')
       })
     },
-    handleRouteTypeTreeChecked(node) {
-      this.handleTreeChecked(this.$refs.routeTypeTree, node.id)
-      this.form.fields.permissions = [...this.$refs.routeTypeTree.getCheckedKeys(), ...this.$refs.otherTypeTree.getCheckedKeys()]
-    },
-    handleOtherTypeTreeChecked(node) {
-      this.handleTreeChecked(this.$refs.otherTypeTree, node.id)
-      this.form.fields.permissions = [...this.$refs.routeTypeTree.getCheckedKeys(), ...this.$refs.otherTypeTree.getCheckedKeys()]
+    handleRouteTreeChecked(node) {
+      this.handleTreeChecked(this.$refs.routeTree, node.id)
+      this.form.fields.permissions = this.$refs.routeTree.getCheckedKeys()
     },
     handleTreeChecked(Tree, nodeKey) {
       const checkedNode = Tree.getNode(nodeKey)
@@ -420,7 +396,7 @@ export default {
 .el-tree {
   .el-tree__empty-text {
     left: 0;
-    top: 0;
+    top: -7px;
     transform: none;
   }
 }

@@ -15,16 +15,16 @@ export function updateRole(data) {
   return http.post('/roles/update', qs.stringify(data))
 }
 
-export function editRole(data) {
-  return http.post('/roles/edit', qs.stringify(data))
-}
-
 export function deleteRole(id) {
-  return http.post('/roles/delete', qs.stringify({
-    id: id
-  }))
+  return http.post('/roles/delete', qs.stringify({ id }))
 }
 
-export function getPermissions(search) {
-  return http.get('/roles/permissions')
+export function getCreateRoleFormData() {
+  return http.get('/roles/create')
+}
+
+export function getUpdateRoleFormData(id) {
+  return http.get('/roles/update', {
+    params: { id }
+  })
 }

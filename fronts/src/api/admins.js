@@ -3,8 +3,8 @@ import qs from 'qs'
 
 export function login({ username, password }) {
   return http.post('/login', qs.stringify({
-    username: username,
-    password: password
+    username,
+    password
   }))
 }
 
@@ -12,6 +12,10 @@ export function logout(token) {
   return http.post('/logout', qs.stringify({
     token
   }))
+}
+
+export function updatePassword(data) {
+  return http.post('/admins/update-password', qs.stringify(data))
 }
 
 export function getAdmins(search) {
@@ -36,16 +40,20 @@ export function updateAdmin(data) {
   return http.post('/admins/update', qs.stringify(data))
 }
 
-export function editAdmin(data) {
-  return http.post('/admins/edit', qs.stringify(data))
-}
-
 export function deleteAdmin(id) {
-  return http.post('/admins/delete', qs.stringify({
-    id: id
-  }))
+  return http.post('/admins/delete', qs.stringify({ id }))
 }
 
-export function getRoles() {
-  return http.get('/admins/roles')
+export function resetPassword(id) {
+  return http.post('/admins/reset-password', qs.stringify({ id }))
+}
+
+export function getCreateAdminFormData() {
+  return http.get('/admins/create')
+}
+
+export function getUpdateAdminFormData(id) {
+  return http.get('/admins/update', {
+    params: { id }
+  })
 }

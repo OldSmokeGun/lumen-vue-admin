@@ -103,13 +103,13 @@
           </template>
         </el-table-column>
         <el-table-column
-          v-if="$permission(['/api/admins/edit', '/api/admins/update', '/api/admins/delete'])"
+          v-if="$permission(['/api/admins/edit', '/api/admins/reset-password', '/api/admins/update', '/api/admins/delete'])"
           label="操作"
           align="center"
         >
           <template slot-scope="scope">
             <el-button
-              v-permission="'/api/admins/edit'"
+              v-permission="'/api/admins/update'"
               class="action-bar-text-button-forbidden"
               type="text"
               icon="el-icon-unlock"
@@ -117,6 +117,14 @@
               :loading="scope.row.editStatusBtnLoading"
               @click="handleEditStatus(scope)"
             >{{ scope.row.status ? '禁用' : '启用' }}</el-button>
+            <el-button
+              v-permission="'/api/admins/reset-password'"
+              class="action-bar-text-button-reset"
+              type="text"
+              icon="el-icon-view"
+              size="mini"
+              @click="handleResetPassword(scope)"
+            >重置密码</el-button>
             <el-button
               v-permission="'/api/admins/update'"
               class="action-bar-text-button-edit"
@@ -168,7 +176,7 @@
           <el-form-item label="昵称" prop="nickname">
             <el-input v-model="form.fields.nickname" placeholder="请输入昵称" />
           </el-form-item>
-          <el-form-item label="密码" prop="password">
+          <el-form-item v-if="!form.fields.id" label="密码" prop="password">
             <el-input v-model="form.fields.password" placeholder="请输入密码" show-password />
           </el-form-item>
           <el-form-item label="邮箱" prop="email">
@@ -177,8 +185,9 @@
           <el-form-item v-model="form.fields.avatar" label="头像">
             <el-upload
               ref="upload"
-              name="avatar"
-              action="/api/admins/upload"
+              name="file"
+              action="/api/upload/file"
+              :data="{dir: 'admin/avatar'}"
               class="avatar-uploader"
               accept="image/*"
               :headers="{Authorization: getToken()}"
@@ -234,7 +243,7 @@
 </template>
 
 <script>
-import { getAdmins, createAdmin, updateAdmin, editAdmin, deleteAdmin, getRoles } from '@/api/admins'
+import { getAdmins, createAdmin, updateAdmin, deleteAdmin, getCreateAdminFormData, getUpdateAdminFormData, resetPassword } from '@/api/admins'
 import Pagination from '@/components/Pagination'
 import { getToken } from '@/utils/cookie'
 import DialogForm from '@/views/components/DialogForm'
@@ -333,7 +342,7 @@ export default {
         uploadPercent: 0
       })
 
-      getRoles().then(response => {
+      getCreateAdminFormData().then(response => {
         this.form.roles = response.data.data
       })
 
@@ -361,7 +370,7 @@ export default {
         uploadPercent: 0
       })
 
-      getRoles().then(response => {
+      getUpdateAdminFormData(scope.row.id).then(response => {
         this.form.roles = response.data.data
       })
 
@@ -370,11 +379,11 @@ export default {
         roles.push(role.id)
       }
 
+      delete this.form.fields.password
       Object.assign(this.form.fields, {
         id: scope.row.id,
         username: scope.row.username,
         nickname: scope.row.nickname,
-        password: '',
         avatar: scope.row.avatar,
         email: scope.row.email,
         status: scope.row.status,
@@ -453,7 +462,7 @@ export default {
         status: Number(!scope.row.status)
       }
 
-      editAdmin(params).then(response => {
+      updateAdmin(params).then(response => {
         this.$delete(scope.row, 'editStatusBtnLoading')
         if (response.data.code === 'OK') {
           scope.row.status = Number(!scope.row.status)
@@ -461,6 +470,19 @@ export default {
         }
       }).catch(e => {
         this.$delete(scope.row, 'editStatusBtnLoading')
+      })
+    },
+    handleResetPassword(scope) {
+      this.$confirm('是否重置为默认密码？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        resetPassword(scope.row.id).then(response => {
+          if (response.data.code === 'OK') {
+            this.$message.success('重置密码成功')
+          }
+        })
       })
     },
     getToken() {
@@ -493,10 +515,9 @@ export default {
       this.avatarUpload.uploadPercent = event.percent
     },
     handleAvatarSuccess(res, file) {
-      this.form.fields.avatar = res.data.avatar_path
+      this.form.fields.avatar = res.data.file_path
       this.avatarUpload.uploadProgressStatus = 'success'
     }
-
   }
 }
 </script>

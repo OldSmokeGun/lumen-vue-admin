@@ -20,10 +20,10 @@ export default {
           for (const item of routes) {
             const route = {}
             route.path = item.identification
-            if (!Number(item.parent_id) && !item.component) {
+            if (!Number(item.parent_id)) {
               route.component = componentsMap['layout']
             } else {
-              route.component = (item.component in componentsMap) ? componentsMap[item.component] : componentsMap['missing']
+              route.component = (item.identification in componentsMap) ? componentsMap[item.identification] : componentsMap['missing']
             }
             route.meta = { title: item.title, icon: item.icon }
             route.redirect = item.redirect

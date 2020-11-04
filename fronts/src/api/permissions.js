@@ -15,20 +15,16 @@ export function updatePermission(data) {
   return http.post('/permissions/update', qs.stringify(data))
 }
 
-export function editPermission(data) {
-  return http.post('/permissions/edit', qs.stringify(data))
-}
-
 export function deletePermission(id) {
-  return http.post('/permissions/delete', qs.stringify({
-    id: id
-  }))
+  return http.post('/permissions/delete', qs.stringify({ id }))
 }
 
-export function getPermissionTrees(type) {
-  return http.get('/permissions/trees', {
-    params: {
-      type: type
-    }
+export function getCreatePermissionFormData() {
+  return http.get('/permissions/create')
+}
+
+export function getUpdatePermissionFormData(id) {
+  return http.get('/permissions/update', {
+    params: { id }
   })
 }

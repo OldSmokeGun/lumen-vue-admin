@@ -22,6 +22,9 @@
           <router-link to="/">
             <el-dropdown-item>主页</el-dropdown-item>
           </router-link>
+          <el-dropdown-item divided @click.native="resetPassword">
+            <span style="display:block;">修改密码</span>
+          </el-dropdown-item>
           <el-dropdown-item divided @click.native="logout">
             <span style="display:block;">注销</span>
           </el-dropdown-item>
@@ -61,7 +64,10 @@ export default {
             await this.$store.dispatch('permissions/resetRoutes')
             this.$router.push(`/login?redirect=${this.$route.fullPath}`)
           }
-        }).catch(e => { console.log(e.message) })
+        })
+    },
+    resetPassword() {
+      this.$emit('resetPassword')
     }
   }
 }

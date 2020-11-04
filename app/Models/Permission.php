@@ -11,7 +11,7 @@ class Permission extends Model
 {
     use NodeTrait;
 
-    protected $table = 'permissions';
+    protected $table      = 'permissions';
     protected $dateFormat = 'U';
 
     const CREATED_AT = 'create_time';
@@ -63,11 +63,14 @@ class Permission extends Model
         return $query->where(['status' => 1]);
     }
 
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'roles_permissions', 'permission_id', 'role_id');
+    }
+
     public function getPermissonList(array $search): ?array
     {
-        $type         = $search['type'];
         $status       = $search['status'];
-        $searchType   = $search['type'] === '' ? false : true;
         $searchStatus = $search['status'] === '' ? false : true;
 
         $permissions = $this
@@ -76,9 +79,6 @@ class Permission extends Model
             })
             ->when($search['title'], function ($query, $title) {
                 $query->where('title', 'like', "%{$title}%");
-            })
-            ->when($searchType, function ($query) use ($type) {
-                $query->where(['type' => $type]);
             })
             ->when($searchStatus, function ($query) use ($status) {
                 $query->where(['status' => $status]);
@@ -91,40 +91,29 @@ class Permission extends Model
         return $permissions;
     }
 
-    public function createPermission(array $permission): bool
+    public function createPermission(array $data): bool
     {
-        $this->identification = $permission['identification'];
-        $this->title          = $permission['title'];
-        $this->icon           = $permission['icon'];
-        $this->component      = $permission['component'];
-        $this->redirect       = $permission['redirect'];
-        $this->description    = $permission['description'];
-        $this->type           = $permission['type'];
-        $this->sort           = $permission['sort'];
-        $this->status         = $permission['status'];
-        $this->display        = $permission['display'];
+        $this->identification = $data['identification'];
+        $this->title          = $data['title'];
+        $this->icon           = $data['icon'];
+        $this->redirect       = $data['redirect'];
+        $this->description    = $data['description'];
+        $this->type           = $data['type'];
+        $this->sort           = $data['sort'];
+        $this->status         = $data['status'];
+        $this->display        = $data['display'];
 
         DB::beginTransaction();
 
-        if ( $permission['parent_id'] )
-        {
-            try {
-                $parent = $this->find($permission['parent_id']);
+        try {
+            if ($data['parent_id']) {
+                $parent = $this->find($data['parent_id']);
 
-                if ( !$parent->appendNode($this) ) throw new \Exception();
+                if (!$parent->appendNode($this)) throw new \Exception();
 
-                DB::commit();
-                return true;
-
-            } catch (\Exception $exception) {
-                DB::rollBack();
-                return false;
+            } else {
+                if (!$this->saveAsRoot()) throw new \Exception();
             }
-        }
-
-        try
-        {
-            if ( !$this->saveAsRoot() ) throw new \Exception();
 
             DB::commit();
             return true;
@@ -136,49 +125,34 @@ class Permission extends Model
         }
     }
 
-    public function updatePermission(array $permission): bool
+    public function updatePermission(array $data): bool
+    {
+        isset($data['identification']) && $this->identification = $data['identification'];
+        isset($data['title']) && $this->title = $data['title'];
+        isset($data['icon']) && $this->icon = $data['icon'];
+        isset($data['redirect']) && $this->redirect = $data['redirect'];
+        isset($data['description']) && $this->description = $data['description'];
+        isset($data['type']) && $this->type = $data['type'];
+        isset($data['parent_id']) && $this->parent_id = $data['parent_id'];
+        isset($data['sort']) && $this->sort = $data['sort'];
+        isset($data['status']) && $this->status = $data['status'];
+        isset($data['display']) && $this->display = $data['display'];
+
+        if (!$this->save()) return false;
+
+        return true;
+    }
+
+    public function deletePermission(): bool
     {
         DB::beginTransaction();
 
         try {
+            $result = $this->delete();
 
-            $model = $this->find($permission['id']);
+            if (!$result) throw new \Exception();
 
-            $model->identification = $permission['identification'];
-            $model->title          = $permission['title'];
-            $model->icon           = $permission['icon'];
-            $model->component      = $permission['component'];
-            $model->redirect       = $permission['redirect'];
-            $model->description    = $permission['description'];
-            $model->type           = $permission['type'];
-            $model->parent_id      = $permission['parent_id'];
-            $model->sort           = $permission['sort'];
-            $model->status         = $permission['status'];
-            $model->display         = $permission['display'];
-
-            if ( !$model->save() ) throw new \Exception();
-
-            DB::commit();
-            return true;
-
-        } catch (\Exception $exception) {
-
-            DB::rollBack();
-            return false;
-        }
-
-    }
-
-    public function deletePermission(int $id): bool
-    {
-        DB::beginTransaction();
-
-        try
-        {
-            RolePermission::where(['permission_id' => $id])->delete();
-            $result = $this->destroy($id);
-
-            if ( !$result ) throw new \Exception();
+            $this->roles()->detach();
 
             DB::commit();
             return true;
@@ -190,64 +164,21 @@ class Permission extends Model
         }
     }
 
-    public function editPermission(array $fields): bool
+    public function getPermissionTrees(): array
     {
-        $model = $this->find($fields['id']);
-
-        unset($fields['id']);
-
-        foreach ( $fields as $fieldKey => $fieldValue )
-        {
-            $model->$fieldKey = $fieldValue;
-        }
-
-        return $model->save();
-    }
-
-    public function getPermissionTrees(int $type = null): array
-    {
-        $searchType = $type === null ? false : true;
-
-        $trees = $this
+        return $this
             ->select([
                 'id',
                 'identification',
-                'title',
+                'title as tree_title',
                 'description',
                 'parent_id',
                 'lft',
                 'rgt'
             ])
-            ->when($searchType, function ($query) use ($type) {
-                $query->where(['type' => $type]);
-            })
             ->sort()
             ->get()
             ->toTree()
             ->toArray();
-
-        $recursive = function ( $children ) use ( &$recursive ) {
-
-            if ( !$children )
-            {
-                return $children;
-            }
-
-            foreach ( $children as &$posterity )
-            {
-                $posterity['tree_title'] = $posterity['title'] ? $posterity['title'] . ' - ' . $posterity['identification'] : $posterity['identification'];
-                $posterity['children']   = $recursive($posterity['children']);
-            }
-
-            return $children;
-        };
-
-        foreach ( $trees as &$tree )
-        {
-            $tree['tree_title'] = $tree['title'] ? $tree['title'] . ' - ' . $tree['identification'] : $tree['identification'];
-            $tree['children']   = $recursive($tree['children']);
-        }
-
-        return $trees;
     }
 }

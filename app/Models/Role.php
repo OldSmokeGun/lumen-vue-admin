@@ -29,6 +29,11 @@ class Role extends Model
         return $this->belongsToMany(Permission::class, 'roles_permissions', 'role_id', 'permission_id');
     }
 
+    public function admins()
+    {
+        return $this->belongsToMany(Admin::class, 'admins_roles', 'role_id', 'admin_id');
+    }
+
     /**
      * @param Builder $query
      * @param string $order
@@ -56,13 +61,13 @@ class Role extends Model
         $searchStatus = $search['status'] === '' ? false : true;
 
         $roles = $this->select([
-                'id',
-                'name',
-                'description',
-                'status',
-                'create_time',
-                'update_time'
-            ])
+            'id',
+            'name',
+            'description',
+            'status',
+            'create_time',
+            'update_time'
+        ])
             ->when($search['name'], function ($query, $name) {
                 $query->where('name', 'like', "%{$name}%");
             })
@@ -72,119 +77,77 @@ class Role extends Model
             ->idSort()
             ->paginate($search['limit']);
 
-        foreach ( $roles as $role )
-        {
+        foreach ($roles as $role) {
             $role->permissions = $role->permissions()->select(['permissions.id'])->get()->toArray();
         }
 
         return $roles->toArray();
     }
 
-    public function createRole(array $role): bool
+    public function createRole(array $data): bool
     {
         DB::beginTransaction();
 
-        try
-        {
-            $this->name        = $role['name'];
-            $this->description = $role['description'];
-            $this->status      = $role['status'];
+        try {
+            $this->name        = $data['name'];
+            $this->description = $data['description'];
+            $this->status      = $data['status'];
 
-            if ( !$this->save() ) throw new \Exception();
+            if (!$this->save()) throw new \Exception();
 
-            if ( $role['permissions'] )
-            {
-                $rolesPermissions = [];
-
-                foreach ( $role['permissions'] as $role )
-                {
-                    $rolesPermissions[] = ['role_id' => $this->id, 'permission_id' => $role, 'create_time' => time()];
-                }
-
-                if ( !RolePermission::insert($rolesPermissions) ) throw new \Exception();
-            }
+            $this->permissions()->attach(array_fill_keys($data['permissions'], ['create_time' => time()]));
 
             DB::commit();
             return true;
 
-        } catch ( \Exception $exception ) {
-            DB::rollBack();
-            return false;
-        }
+        } catch (\Exception $exception) {
 
-    }
-
-    public function updateRole(array $role): bool
-    {
-        $model = $this->find($role['id']);
-
-        DB::beginTransaction();
-
-        try
-        {
-            $model->name        = $role['name'];
-            $model->description = $role['description'];
-            $model->status      = $role['status'];
-
-            if ( !$model->save() ) throw new \Exception();
-
-            RolePermission::where(['role_id' => $role['id']])->delete();
-
-            if ( $role['permissions'] )
-            {
-                $rolesPermissions = [];
-
-                foreach ( $role['permissions'] as $permission )
-                {
-                    $rolesPermissions[] = ['role_id' => $role['id'], 'permission_id' => $permission, 'create_time' => time()];
-                }
-
-                if ( !RolePermission::insert($rolesPermissions) ) throw new \Exception();
-            }
-
-            DB::commit();
-            return true;
-
-        } catch ( \Exception $exception ) {
-            DB::rollBack();
-            return false;
-        }
-
-    }
-
-    public function deleteRole(int $id): bool
-    {
-        DB::beginTransaction();
-
-        try
-        {
-            AdminRole::where(['role_id' => $id])->delete();
-            RolePermission::where(['role_id' => $id])->delete();
-            $roleResult = $this->destroy($id);
-
-            if ( !$roleResult ) throw new \Exception();
-
-            DB::commit();
-            return true;
-
-        } catch ( \Exception $exception ) {
             DB::rollBack();
             return false;
         }
     }
 
-    public function editRole(array $fields): bool
+    public function updateRole(array $data): bool
     {
-        $model = $this->find($fields['id']);
+        DB::beginTransaction();
 
-        unset($fields['id']);
+        try {
+            isset($data['name']) && $this->name = $data['name'];
+            isset($data['description']) && $this->description = $data['description'];
+            isset($data['status']) && $this->status = $data['status'];
 
-        foreach ( $fields as $fieldKey => $fieldValue )
-        {
-            $model->$fieldKey = $fieldValue;
+            if (!$this->save()) throw new \Exception();
+
+            isset($data['permissions']) && $this->permissions()->sync(array_fill_keys($data['permissions'], ['update_time' => time()]));
+
+            DB::commit();
+            return true;
+
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            return false;
         }
-
-        return  $model->save();
     }
 
+    public function deleteRole(): bool
+    {
+        DB::beginTransaction();
+
+        try {
+            $roleResult = $this->delete();
+
+            if (!$roleResult) throw new \Exception();
+
+            $this->permissions()->detach();
+            $this->admins()->detach();
+
+            DB::commit();
+            return true;
+
+        } catch (\Exception $exception) {
+
+            DB::rollBack();
+            return false;
+        }
+    }
 }

@@ -13,13 +13,13 @@ class PermissionController extends Controller
     protected function formValidator(Request $request): \Illuminate\Contracts\Validation\Validator
     {
         return Validator::make($request->all(), [
-            'identification' => 'required|max:100',
-            'title'          => 'required|max:50',
+            'identification' => 'sometimes|required|max:100',
+            'title'          => 'sometimes|required|max:50',
             'icon'           => 'max:50',
             'component'      => 'max:50',
             'redirect'       => 'max:100',
             'description'    => 'max:100',
-            'type'           => 'required|integer',
+            'type'           => 'sometimes|required|integer',
             'parent_id'      => 'integer|nullable',
             'status'         => 'integer',
         ], [
@@ -50,13 +50,10 @@ class PermissionController extends Controller
         $search = [
             'identification' => strval($request->input('identification', '')),
             'title'          => strval($request->input('title', '')),
-            'type'           => $request->input('type') ?? '',
             'status'         => $request->input('status') ?? '',
         ];
 
-        $model = new PermissionModel();
-
-        $list = $model->getPermissonList($search);
+        $list = (new PermissionModel())->getPermissonList($search);
 
         return HttpResponse::successResponse($list);
     }
@@ -70,10 +67,13 @@ class PermissionController extends Controller
      */
     public function create(Request $request)
     {
+        if ($request->isMethod('GET')) {
+            return HttpResponse::successResponse($this->formTrees());
+        }
+
         $validator = $this->formValidator($request);
 
-        if ( $validator->fails() )
-        {
+        if ($validator->fails()) {
             return HttpResponse::failedResponse($validator->errors()->first());
         }
 
@@ -81,7 +81,6 @@ class PermissionController extends Controller
             'identification' => strval($request->input('identification')),
             'title'          => strval($request->input('title')),
             'icon'           => strval($request->input('icon', '')),
-            'component'      => strval($request->input('component', '')),
             'redirect'       => strval($request->input('redirect', '')),
             'description'    => strval($request->input('description', '')),
             'type'           => intval($request->input('type', 0)),
@@ -91,25 +90,19 @@ class PermissionController extends Controller
             'display'        => intval($request->input('display', 1)),
         ];
 
-        if ( $permission['type'] )
-        {
-            $permission['icon']      = '';
-            $permission['component'] = '';
-            $permission['redirect']  = '';
-            $permission['display']   = 0;
+        if ($permission['type']) {
+            $permission['icon']     = '';
+            $permission['redirect'] = '';
+            $permission['display']  = 0;
         }
 
-        if ( preg_match('/^https?:\/\//', $permission['identification']) )
-        {
-            $permission['component'] = '';
-            $permission['redirect']  = '';
+        if (preg_match('/^https?:\/\//', $permission['identification'])) {
+            $permission['redirect'] = '';
         }
 
-        $model = new PermissionModel();
+        $result = (new PermissionModel())->createPermission($permission);
 
-        $result = $model->createPermission($permission);
-
-        if ( !$result ) return HttpResponse::failedResponse('数据保存失败');
+        if (!$result) return HttpResponse::failedResponse('数据保存失败');
 
         return HttpResponse::successResponse();
     }
@@ -123,68 +116,66 @@ class PermissionController extends Controller
      */
     public function update(Request $request)
     {
-        if ( !$request->input('id') )
-        {
+        if (!$request->input('id')) {
             return HttpResponse::failedResponse(HttpResponseCode::ILLEGAL_REQUEST_CODE_MESSAGE, HttpResponseCode::ILLEGAL_REQUEST_CODE);
+        }
+
+        $permission = PermissionModel::find($request->input('id'));
+        if (!$permission) HttpResponse::failedResponse('权限不存在');
+
+        if ($request->isMethod('GET')) {
+            return HttpResponse::successResponse($this->formTrees());
         }
 
         $validator = $this->formValidator($request);
 
-        if ( $validator->fails() )
-        {
+        if ($validator->fails()) {
             return HttpResponse::failedResponse($validator->errors()->first());
         }
 
-        $permission = [
-            'id'             => strval($request->input('id')),
-            'identification' => strval($request->input('identification')),
-            'title'          => strval($request->input('title')),
-            'icon'           => strval($request->input('icon', '')),
-            'component'      => strval($request->input('component', '')),
-            'redirect'       => strval($request->input('redirect', '')),
-            'description'    => strval($request->input('description', '')),
-            'type'           => intval($request->input('type', 0)),
-            'parent_id'      => intval($request->input('parent_id', 0)),
-            'sort'           => intval($request->input('sort', 0)),
-            'status'         => intval($request->input('status', 1)),
-            'display'        => intval($request->input('display', 1)),
-        ];
+        $data = [];
+        $request->has('id') && $data['id'] = intval($request->input('id'));
+        $request->has('identification') && $data['identification'] = strval($request->input('identification'));
+        $request->has('title') && $data['title'] = strval($request->input('title'));
+        $request->has('icon') && $data['icon'] = strval($request->input('icon', ''));
+        $request->has('redirect') && $data['redirect'] = strval($request->input('redirect', ''));
+        $request->has('description') && $data['description'] = strval($request->input('description', ''));
+        $request->has('type') && $data['type'] = intval($request->input('type', 0));
+        $request->has('parent_id') && $data['parent_id'] = intval($request->input('parent_id', 0));
+        $request->has('sort') && $data['sort'] = intval($request->input('sort', 0));
+        $request->has('status') && $data['status'] = intval($request->input('status', 1));
+        $request->has('display') && $data['display'] = intval($request->input('display', 1));
 
-        if ( $permission['id'] == $permission['parent_id'] )
-        {
-            return HttpResponse::failedResponse('父节点不能为自身节点');
-        }
+        if (isset($data['parent_id'])) {
+            if ($data['parent_id'] == $data['id']) {
+                return HttpResponse::failedResponse('父节点不能为自身节点');
+            }
 
-        $model = new PermissionModel();
+            if ($data['parent_id']) {
+                $parent = PermissionModel::find($data['parent_id']);
+                $child  = PermissionModel::find($data['id']);
 
-        if ( $permission['parent_id'] )
-        {
-            $parent = $model->find($permission['parent_id']);
-            $child = $model->find($permission['id']);
-
-            if ( ( $parent->lft > $child->lft ) && ( $parent->rgt < $child->rgt ) )
-            {
-                return HttpResponse::failedResponse('不能添加到后代节点');
+                if (($parent->lft > $child->lft) && ($parent->rgt < $child->rgt)) {
+                    return HttpResponse::failedResponse('不能添加到后代节点');
+                }
             }
         }
 
-        if ( $permission['type'] )
-        {
-            $permission['icon']      = '';
-            $permission['component'] = '';
-            $permission['redirect']  = '';
-            $permission['display']   = 0;
+        if (isset($data['type']) && $data['type']) {
+            $data['icon']      = '';
+            $data['component'] = '';
+            $data['redirect']  = '';
+            $data['display']   = 0;
         }
 
-        if ( preg_match('/^https?:\/\//', $permission['identification']) )
-        {
-            $permission['component'] = '';
-            $permission['redirect'] = '';
+        if (isset($data['identification']) && preg_match('/^https?:\/\//', $data['identification'])) {
+            $data['component'] = '';
+            $data['redirect']  = '';
         }
 
-        $result = $model->updatePermission($permission);
+        $result = $permission->updatePermission($data);
 
-        if ( !$result ) return HttpResponse::failedResponse('数据更新失败');
+        if (!$result) return HttpResponse::failedResponse('数据更新失败');
 
         return HttpResponse::successResponse();
     }
@@ -198,73 +189,22 @@ class PermissionController extends Controller
      */
     public function delete(Request $request)
     {
-        if ( !$request->input('id') )
-        {
+        if (!$request->input('id')) {
             return HttpResponse::failedResponse(HttpResponseCode::ILLEGAL_REQUEST_CODE_MESSAGE, HttpResponseCode::ILLEGAL_REQUEST_CODE);
         }
 
-        $model = new PermissionModel();
+        $permission = PermissionModel::find($request->input('id'));
+        if (!$permission) HttpResponse::failedResponse('权限不存在');
 
-        $childrenCount = $model->where(['parent_id' => $request->input('id')])->count();
+        $childrenCount = PermissionModel::where(['parent_id' => $permission->id])->count();
 
-        if ( $childrenCount )
-        {
+        if ($childrenCount) {
             return HttpResponse::failedResponse('当前节点还有子节点，无法删除');
         }
 
-        $result = (new PermissionModel())->deletePermission($request->input('id'));
+        $result = $permission->deletePermission();
 
-        if ( !$result ) return HttpResponse::failedResponse('删除失败');
-
-        return HttpResponse::successResponse();
-    }
-
-    /**
-     * 编辑权限
-     *
-     * @param Request $request
-     *
-     * @return mixed
-     */
-    public function edit(Request $request)
-    {
-        if ( !$request->input('id') )
-        {
-            return HttpResponse::failedResponse(HttpResponseCode::ILLEGAL_REQUEST_CODE_MESSAGE, HttpResponseCode::ILLEGAL_REQUEST_CODE);
-        }
-
-        $permissionModel                = new PermissionModel();
-        $enableChildrenPermissionsCount = $permissionModel->where([
-            'parent_id' => $request->input('id'),
-            'status' => 1,
-        ])->count();
-
-        if ( $enableChildrenPermissionsCount )
-        {
-            return HttpResponse::failedResponse('此节点还有可用的子节点');
-        }
-
-        $params          = $request->input();
-        $fieldsWhiteList = [
-            'id'             => 0,
-            'identification' => '',
-            'title'          => '',
-            'icon'           => '',
-            'component'      => '',
-            'redirect'       => '',
-            'description'    => '',
-            'type'           => '',
-            'sort'           => '',
-            'status'         => 1
-        ];
-
-        $fileds = array_intersect_key($params, $fieldsWhiteList);
-
-        $model = new PermissionModel();
-
-        $result = $model->editPermission($fileds);
-
-        if ( !$result ) return HttpResponse::failedResponse('数据修改失败');
+        if (!$result) return HttpResponse::failedResponse('删除失败');
 
         return HttpResponse::successResponse();
     }
@@ -272,19 +212,15 @@ class PermissionController extends Controller
     /**
      * 获取权限树
      *
-     * @param Request $request
-     *
-     * @return mixed
+     * @return array
      */
-    public function trees(Request $request)
+    protected function formTrees()
     {
         $model = new PermissionModel();
-        $type  = intval($request->input('type'));
-
-        $trees = $model->getPermissionTrees($type);
+        $trees = $model->getPermissionTrees();
 
         array_unshift($trees, ['id' => 0, 'parent_id' => null, 'tree_title' => '顶级权限']);
 
-        return HttpResponse::successResponse($trees);
+        return $trees;
     }
 }

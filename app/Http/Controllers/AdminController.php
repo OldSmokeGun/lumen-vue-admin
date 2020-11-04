@@ -6,7 +6,7 @@ use App\Facades\HttpResponse;
 use App\Models\Admin as AdminModel;
 use App\Utils\HttpResponse\HttpResponseCode;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class AdminController extends Controller
@@ -14,11 +14,11 @@ class AdminController extends Controller
     protected function formValidator(Request $request): \Illuminate\Contracts\Validation\Validator
     {
         return Validator::make($request->all(), [
-            'username' => 'required|max:8',
-            'nickname' => 'required|max:12',
+            'username' => 'sometimes|required|max:8',
+            'nickname' => 'sometimes|required|max:12',
             'password' => 'required_without:id|max:16',
-            'avatar'   => 'required|string',
-            'email'    => 'required|email',
+            'avatar'   => 'sometimes|required|string',
+            'email'    => 'sometimes|required|email',
             'status'   => 'integer',
             'roles'    => 'array',
         ], [
@@ -34,6 +34,19 @@ class AdminController extends Controller
             'email.email'       => '邮箱格式不正确',
             'status'            => '状态值类型错误',
             'roles.array'       => '角色值类型错误',
+        ]);
+    }
+
+    protected function resetPasswordFormValidator(Request $request): \Illuminate\Contracts\Validation\Validator
+    {
+        return Validator::make($request->all(), [
+            'old_password' => 'required|max:16',
+            'new_password' => 'required|max:16',
+        ], [
+            'old_password.required' => '原密码必须',
+            'old_password.max'      => '原密码不能超过 16 个字符',
+            'new_password.required' => '新密码必须',
+            'new_password.max'      => '新密码不能超过 16 个字符',
         ]);
     }
 
@@ -55,15 +68,14 @@ class AdminController extends Controller
             'limit'    => intval($request->input('limit', 10)),
         ];
 
-        $model = new AdminModel();
-
-        $list = $model->getAdminList($search);
+        $list = (new AdminModel())->getAdminList($search);
 
         return HttpResponse::successResponse($list);
     }
 
     /**
      * 获取管理员全信息（包括权限）
+     *
      * @param Request $request
      *
      * @return \Illuminate\Http\JsonResponse
@@ -72,27 +84,13 @@ class AdminController extends Controller
     {
         $token = strval($request->input('token', ''));
 
-        if ( !$token )
-        {
+        if (!$token) {
             return HttpResponse::failedResponse(HttpResponseCode::ILLEGAL_REQUEST_CODE_MESSAGE, HttpResponseCode::ILLEGAL_REQUEST_CODE);
         }
 
-        $fields = [
-            'id',
-            'username',
-            'nickname',
-            'avatar',
-            'email',
-            'last_login_time',
-            'last_login_ip',
-        ];
+        $admin = (new AdminModel())->getAdminPermissionsByToken($token);
 
-        $model = new AdminModel();
-
-        $admin = $model->getAdminPermissionsByToken($token, $fields);
-
-        if ( $admin )
-        {
+        if ($admin) {
             $admin = [
                 'id'              => $admin['id'],
                 'username'        => $admin['username'],
@@ -117,14 +115,17 @@ class AdminController extends Controller
      */
     public function create(Request $request)
     {
+        if ($request->isMethod("GET")) {
+            return HttpResponse::successResponse($this->formRoles());
+        }
+
         $validator = $this->formValidator($request);
 
-        if ( $validator->fails() )
-        {
+        if ($validator->fails()) {
             return HttpResponse::failedResponse($validator->errors()->first());
         }
 
-        $admin = [
+        $data = [
             'username' => strval($request->input('username')),
             'nickname' => strval($request->input('nickname')),
             'password' => strval($request->input('password')),
@@ -134,16 +135,13 @@ class AdminController extends Controller
             'roles'    => $request->input('roles', []),
         ];
 
-        if ( count($admin['roles']) > 3 )
-        {
+        if (count($data['roles']) > 3) {
             return HttpResponse::failedResponse('最多只能选择三个角色');
         }
 
-        $model = new AdminModel();
+        $result = (new AdminModel())->createAdmin($data);
 
-        $result = $model->createAdmin($admin);
-
-        if ( !$result ) return HttpResponse::failedResponse('数据保存失败');
+        if (!$result) return HttpResponse::failedResponse('数据保存失败');
 
         return HttpResponse::successResponse();
     }
@@ -157,44 +155,43 @@ class AdminController extends Controller
      */
     public function update(Request $request)
     {
-        if ( !$request->input('id') )
-        {
+        if (!$request->input('id')) {
             return HttpResponse::failedResponse(HttpResponseCode::ILLEGAL_REQUEST_CODE_MESSAGE, HttpResponseCode::ILLEGAL_REQUEST_CODE);
+        }
+
+        $admin = AdminModel::find($request->input('id'));
+        if (!$admin) HttpResponse::failedResponse('用户不存在');
+
+        if ($request->isMethod("GET")) {
+            return HttpResponse::successResponse($this->formRoles());
         }
 
         $validator = $this->formValidator($request);
 
-        if ( $validator->fails() )
-        {
+        if ($validator->fails()) {
             return HttpResponse::failedResponse($validator->errors()->first());
         }
 
-        $admin = [
-            'id'       => strval($request->input('id')),
-            'username' => strval($request->input('username')),
-            'nickname' => strval($request->input('nickname')),
-            'password' => strval($request->input('password')),
-            'avatar'   => strval($request->input('avatar')),
-            'email'    => strval($request->input('email')),
-            'status'   => intval($request->input('status', 1)),
-            'roles'    => $request->input('roles', []),
-        ];
+        $data = [];
+        $request->has('id') && $data['id'] = intval($request->input('id'));
+        $request->has('username') && $data['username'] = strval($request->input('username'));
+        $request->has('nickname') && $data['nickname'] = strval($request->input('nickname'));
+        $request->has('avatar') && $data['avatar'] = strval($request->input('avatar'));
+        $request->has('email') && $data['email'] = strval($request->input('email'));
+        $request->has('status') && $data['status'] = strval($request->input('status'));
+        $request->has('roles') && $data['roles'] = $request->input('roles');
 
-        if ( count($admin['roles']) > 3 )
-        {
+        if (isset($data['roles']) && count($data['roles']) > 3) {
             return HttpResponse::failedResponse('最多只能选择三个角色');
         }
 
-        if ( (int) $request->input('id') === 1 && (int) $admin['status'] === 0 )
-        {
+        if (isset($data['status']) && (int)$request->input('id') === 1 && (int)$data['status'] === 0) {
             return HttpResponse::failedResponse('不能修改超级管理员状态');
         }
 
-        $model = new AdminModel();
+        $result = $admin->updateAdmin($data);
 
-        $result = $model->updateAdmin($admin);
-
-        if ( !$result ) return HttpResponse::failedResponse('数据更新失败');
+        if (!$result) return HttpResponse::failedResponse('数据更新失败');
 
         return HttpResponse::successResponse();
     }
@@ -208,103 +205,86 @@ class AdminController extends Controller
      */
     public function delete(Request $request)
     {
-        if ( !$request->input('id') )
-        {
+        if (!$request->input('id')) {
             return HttpResponse::failedResponse(HttpResponseCode::ILLEGAL_REQUEST_CODE_MESSAGE, HttpResponseCode::ILLEGAL_REQUEST_CODE);
         }
 
-        if ( (int) $request->input('id') === 1 )
-        {
+        $admin = AdminModel::find($request->input('id'));
+        if (!$admin) HttpResponse::failedResponse('用户不存在');
+
+        if ((int)$admin->id === 1) {
             return HttpResponse::failedResponse('不能删除超级管理员');
         }
 
-        $result = (new AdminModel())->deleteAdmin($request->input('id'));
+        $result = $admin->deleteAdmin();
 
-        if ( !$result ) return HttpResponse::failedResponse('删除失败');
+        if (!$result) return HttpResponse::failedResponse('删除失败');
 
         return HttpResponse::successResponse();
     }
 
-    /**
-     * 编辑管理员
-     *
-     * @param Request $request
-     *
-     * @return mixed
-     */
-    public function edit(Request $request)
+    public function resetPassword(Request $request)
     {
-        if ( !$request->input('id') )
-        {
+        if (!$request->input('id', 0)) {
             return HttpResponse::failedResponse(HttpResponseCode::ILLEGAL_REQUEST_CODE_MESSAGE, HttpResponseCode::ILLEGAL_REQUEST_CODE);
         }
 
-        $params          = $request->input();
-        $fieldsWhiteList = [
-            'id'       => 0,
-            'username' => '',
-            'avatar'   => '',
-            'email'    => '',
-            'status'   => 1
-        ];
-
-        $fileds = array_intersect_key($params, $fieldsWhiteList);
-
-        if ( (int) $request->input('id') === 1 && (int) $fileds['status'] === 0 )
-        {
-            return HttpResponse::failedResponse('不能编辑超级管理员状态');
+        $admin = AdminModel::find($request->input('id'));
+        if (!$admin) {
+            return HttpResponse::failedResponse('用户不存在');
         }
 
-        $model = new AdminModel();
+        $result = $admin->resetPassword();
 
-        $result = $model->editAdmin($fileds);
+        if (!$result) return HttpResponse::failedResponse('重置密码失败');
 
-        if ( !$result ) return HttpResponse::failedResponse('数据修改失败');
+        $admin->removeToken();
 
         return HttpResponse::successResponse();
     }
 
-    /**
-     * 管理员头像上传
-     *
-     * @param Request $request
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function upload(Request $request)
+    public function updatePassword(Request $request)
     {
-        if ( !$request->hasFile('avatar') )
-        {
-            return HttpResponse::failedResponse('上传出错');
+        $token = strval($request->input('token', ''));
+
+        if (!$token) {
+            return HttpResponse::failedResponse(HttpResponseCode::ILLEGAL_REQUEST_CODE_MESSAGE, HttpResponseCode::ILLEGAL_REQUEST_CODE);
         }
 
-        if ( !$request->file('avatar')->isValid() )
-        {
-            return HttpResponse::failedResponse('上传的文件无效');
+        $admin = (new AdminModel())->findByToken($token);
+        if (!$admin) {
+            return HttpResponse::failedResponse(HttpResponseCode::LOGIN_INVALID_CODE_MESSAGE, HttpResponseCode::LOGIN_INVALID_CODE);
         }
 
-        $savePath = 'upload/admin/avatar';
+        $validator = $this->resetPasswordFormValidator($request);
 
-        $path = $request->avatar->store($savePath);
-
-        if (!$path)
-        {
-            return HttpResponse::failedResponse('上传文件失败');
+        if ($validator->fails()) {
+            return HttpResponse::failedResponse($validator->errors()->first());
         }
 
-        return HttpResponse::successResponse([
-            'avatar_path' => Storage::url($path)
-        ]);
+        $oldPassword = strval($request->input('old_password'));
+        $newPassword = strval($request->input('new_password'));
+
+        if (!Hash::check($oldPassword, $admin->password)) {
+            return HttpResponse::failedResponse('原密码错误');
+        }
+
+        $result = $admin->updatePassword($newPassword);
+
+        if (!$result) return HttpResponse::failedResponse('修改密码失败');
+
+        $admin->removeToken();
+
+        return HttpResponse::successResponse();
     }
 
     /**
      * 获取表单角色列表
-     * @return \Illuminate\Http\JsonResponse
+     *
+     * @return array|null
      */
-    public function roles()
+    public function formRoles()
     {
-        $roles = (new AdminModel())->getRoles();
-
-        return HttpResponse::successResponse($roles);
+        return (new AdminModel())->getRoles();
     }
 }

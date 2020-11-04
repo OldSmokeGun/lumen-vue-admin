@@ -14,8 +14,8 @@ class RoleController extends Controller
     protected function formValidator(Request $request): \Illuminate\Contracts\Validation\Validator
     {
         return Validator::make($request->all(), [
-            'name'        => 'required|max:16',
-            'description' => 'required|max:50',
+            'name'        => 'sometimes|required|max:16',
+            'description' => 'sometimes|required|max:50',
             'status'      => 'integer',
         ], [
             'name.required'        => '角色名必须',
@@ -42,9 +42,7 @@ class RoleController extends Controller
             'limit'  => intval($request->input('limit', 10)),
         ];
 
-        $model = new RoleModel();
-
-        $list = $model->getRoleList($search);
+        $list = (new RoleModel())->getRoleList($search);
 
         return HttpResponse::successResponse($list);
     }
@@ -58,10 +56,13 @@ class RoleController extends Controller
      */
     public function create(Request $request)
     {
+        if ($request->isMethod("GET")) {
+            return HttpResponse::successResponse($this->formPermissionTrees());
+        }
+
         $validator = $this->formValidator($request);
 
-        if ( $validator->fails() )
-        {
+        if ($validator->fails()) {
             return HttpResponse::failedResponse($validator->errors()->first());
         }
 
@@ -72,11 +73,9 @@ class RoleController extends Controller
             'permissions' => $request->input('permissions', []),
         ];
 
-        $model = new RoleModel();
+        $result = (new RoleModel())->createRole($role);
 
-        $result = $model->createRole($role);
-
-        if ( !$result ) return HttpResponse::failedResponse('数据保存失败');
+        if (!$result) return HttpResponse::failedResponse('数据保存失败');
 
         return HttpResponse::successResponse();
     }
@@ -90,31 +89,33 @@ class RoleController extends Controller
      */
     public function update(Request $request)
     {
-        if ( !$request->input('id') )
-        {
+        if (!$request->input('id')) {
             return HttpResponse::failedResponse(HttpResponseCode::ILLEGAL_REQUEST_CODE_MESSAGE, HttpResponseCode::ILLEGAL_REQUEST_CODE);
+        }
+
+        $role = RoleModel::find($request->input('id'));
+        if (!$role) HttpResponse::failedResponse('角色不存在');
+
+        if ($request->isMethod("GET")) {
+            return HttpResponse::successResponse($this->formPermissionTrees());
         }
 
         $validator = $this->formValidator($request);
 
-        if ( $validator->fails() )
-        {
+        if ($validator->fails()) {
             return HttpResponse::failedResponse($validator->errors()->first());
         }
 
-        $role = [
-            'id'          => strval($request->input('id')),
-            'name'        => strval($request->input('name')),
-            'description' => strval($request->input('description')),
-            'status'      => intval($request->input('status', 1)),
-            'permissions' => $request->input('permissions', []),
-        ];
+        $data = [];
+        $request->has('id') && $data['id'] = intval($request->input('id'));
+        $request->has('name') && $data['name'] = strval($request->input('name'));
+        $request->has('description') && $data['description'] = strval($request->input('description'));
+        $request->has('status') && $data['status'] = intval($request->input('status'));
+        $request->has('permissions') && $data['permissions'] = $request->input('permissions', []);
 
-        $model = new RoleModel();
+        $result = $role->updateRole($data);
 
-        $result = $model->updateRole($role);
-
-        if ( !$result ) return HttpResponse::failedResponse('数据更新失败');
+        if (!$result) return HttpResponse::failedResponse('数据更新失败');
 
         return HttpResponse::successResponse();
     }
@@ -128,60 +129,24 @@ class RoleController extends Controller
      */
     public function delete(Request $request)
     {
-        if ( !$request->input('id') )
-        {
+        if (!$request->input('id')) {
             return HttpResponse::failedResponse(HttpResponseCode::ILLEGAL_REQUEST_CODE_MESSAGE, HttpResponseCode::ILLEGAL_REQUEST_CODE);
         }
 
-        $result = (new RoleModel())->deleteRole($request->input('id'));
+        $role = RoleModel::find($request->input('id'));
+        if (!$role) HttpResponse::failedResponse('角色不存在');
 
-        if ( !$result ) return HttpResponse::failedResponse('删除失败');
+        $result = $role->deleteRole();
+
+        if (!$result) return HttpResponse::failedResponse('删除失败');
 
         return HttpResponse::successResponse();
     }
 
-    /**
-     * 编辑角色
-     *
-     * @param Request $request
-     *
-     * @return mixed
-     */
-    public function edit(Request $request)
-    {
-        if ( !$request->input('id') )
-        {
-            return HttpResponse::failedResponse(HttpResponseCode::ILLEGAL_REQUEST_CODE_MESSAGE, HttpResponseCode::ILLEGAL_REQUEST_CODE);
-        }
-
-        $params          = $request->input();
-        $fieldsWhiteList = [
-            'id'          => 0,
-            'name'        => '',
-            'description' => '',
-            'status'      => 1
-        ];
-
-        $fileds = array_intersect_key($params, $fieldsWhiteList);
-
-        $model = new RoleModel();
-
-        $result = $model->editRole($fileds);
-
-        if ( !$result ) return HttpResponse::failedResponse('数据修改失败');
-
-        return HttpResponse::successResponse();
-    }
-
-    public function permissions()
+    protected function formPermissionTrees()
     {
         $model = new PermissionModel();
 
-        $data = [
-            'routes' => $model->getPermissionTrees(0),
-            'others' => $model->getPermissionTrees(1)
-        ];
-
-        return HttpResponse::successResponse($data);
+        return $model->getPermissionTrees();
     }
 }

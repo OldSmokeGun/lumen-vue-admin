@@ -36,36 +36,29 @@ class LoginController extends Controller
     {
         $validator = $this->loginValidator($request);
 
-        if ( $validator->fails() )
-        {
+        if ($validator->fails()) {
             return HttpResponse::failedResponse($validator->errors()->first());
         }
 
         ['username' => $username, 'password' => $password] = $request->post();
 
-        $adminModel = new AdminModel();
+        $admin = (new AdminModel())->findByName($username);
 
-        $admin = $adminModel->findByName($username);
-
-        if ( !$admin )
-        {
+        if (!$admin) {
             return HttpResponse::failedResponse('用户名或密码错误');
         }
 
-        if ( !Hash::check($password, $admin->password) )
-        {
+        if (!Hash::check($password, $admin->password)) {
             return HttpResponse::failedResponse('用户名或密码错误');
         }
 
-        if ( !$admin->status )
-        {
+        if (!$admin->status) {
             return HttpResponse::failedResponse('账户已被禁用');
         }
 
         $lastLoginInfo = ['last_login_time' => time(), 'last_login_ip' => $request->ip()];
 
-        if ( !$adminModel->setLastLogin($admin, $lastLoginInfo) )
-        {
+        if (!$admin->setLastLogin($lastLoginInfo)) {
             return HttpResponse::failedResponse('登陆出错');
         }
 
@@ -75,8 +68,7 @@ class LoginController extends Controller
             'email'    => $admin->email,
         ]);
 
-        if ( !$adminModel->setToken($admin, $token) )
-        {
+        if (!$admin->setToken($token)) {
             return HttpResponse::failedResponse('登陆出错');
         }
 
@@ -99,21 +91,17 @@ class LoginController extends Controller
     {
         $token = strval($request->input('token', ''));
 
-        if ( !$token )
-        {
+        if (!$token) {
             return HttpResponse::failedResponse(HttpResponseCode::ILLEGAL_REQUEST_CODE_MESSAGE, HttpResponseCode::ILLEGAL_REQUEST_CODE);
         }
 
-        $adminModel = new AdminModel();
-        $admin      = $adminModel->findByToken($token);
+        $admin = (new AdminModel())->findByToken($token);
 
-        if ( !$admin )
-        {
+        if (!$admin) {
             return HttpResponse::failedResponse(HttpResponseCode::LOGIN_INVALID_CODE_MESSAGE, HttpResponseCode::LOGIN_INVALID_CODE);
         }
 
-        if ( !$adminModel->removeToken($admin) )
-        {
+        if (!$admin->removeToken()) {
             return HttpResponse::failedResponse('退出登陆失败');
         }
 
