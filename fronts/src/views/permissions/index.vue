@@ -342,6 +342,7 @@ export default {
       handler() {
         if (!this.form.fields.type) {
           if (isExternal(this.form.fields.identification)) {
+            this.form.fields.redirect = ''
             this.form.fieldsDisabled.redirect = true
           } else {
             this.form.fieldsDisabled.redirect = false
