@@ -6,7 +6,7 @@ function resolve(dir) {
   return path.join(__dirname, dir)
 }
 
-const name = defaultSettings.title || 'vue Admin Template'
+const name = defaultSettings.title || 'Admin'
 
 module.exports = {
   publicPath: '/',
