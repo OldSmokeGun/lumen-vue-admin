@@ -163,13 +163,11 @@ class PermissionController extends Controller
 
         if (isset($data['type']) && $data['type']) {
             $data['icon']      = '';
-            $data['component'] = '';
             $data['redirect']  = '';
             $data['display']   = 0;
         }
 
         if (isset($data['identification']) && preg_match('/^https?:\/\//', $data['identification'])) {
-            $data['component'] = '';
             $data['redirect']  = '';
         }
 

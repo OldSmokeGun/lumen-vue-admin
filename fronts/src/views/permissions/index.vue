@@ -157,7 +157,7 @@
         <el-form
           ref="form"
           :model="form.fields"
-          :rules="formRules"
+          :rules="form.rules"
           label-width="100px"
           :validate-on-rule-change="false"
         >
@@ -173,6 +173,12 @@
               placeholder="请输入权限标题"
             />
           </el-form-item>
+          <el-form-item label="描述" prop="description">
+            <el-input
+              v-model="form.fields.description"
+              placeholder="请填写权限描述"
+            />
+          </el-form-item>
           <el-form-item label="重定向" prop="redirect">
             <el-input
               v-model="form.fields.redirect"
@@ -180,17 +186,12 @@
               :disabled="form.fieldsDisabled.redirect"
             />
           </el-form-item>
-          <el-form-item label="描述" prop="description">
-            <el-input
-              v-model="form.fields.description"
-              placeholder="请填写权限描述"
-            />
-          </el-form-item>
           <el-form-item label="图标" prop="icon">
             <el-select
               v-model="form.fields.icon"
               placeholder="请选择权限图标"
               style="width: 100%"
+              :disabled="form.fieldsDisabled.icon"
             >
               <el-option
                 v-for="icon in icons"
@@ -224,6 +225,7 @@
               :active-value="1"
               :inactive-value="0"
               validate-event
+              :disabled="form.fieldsDisabled.display"
             />
           </el-form-item>
           <el-form-item label="路由类型">
@@ -319,38 +321,44 @@ export default {
           status: 1,
           display: 1
         },
+        rules: {
+          identification: [{ required: true, trigger: 'blur', message: '请填写权限唯一标识' }],
+          title: [{ required: true, trigger: 'blur', message: '请填写权限标题' }]
+        },
         formBtnLoading: false,
         formIsVisible: false,
         fieldsDisabled: {
-          title: false,
-          icon: false
+          redirect: false,
+          icon: false,
+          display: false
         },
         treeData: [],
         defaultExpandedNodeId: 0
       }
     }
   },
-  computed: {
-    formRules() {
-      return {
-        identification: [
-          { required: true, trigger: 'blur', message: '请填写权限唯一标识' }
-        ],
-        title: [{ required: true, trigger: 'blur', message: '请填写权限标题' }]
-      }
-    }
-  },
   watch: {
-    form() {
-      if (!this.form.fields.type) {
-        if (isExternal(this.form.fields.identification)) {
-          this.form.fieldsDisabled.component = true
-          this.form.fieldsDisabled.redirect = true
+    'form.fields': {
+      handler() {
+        if (!this.form.fields.type) {
+          if (isExternal(this.form.fields.identification)) {
+            this.form.fieldsDisabled.redirect = true
+          } else {
+            this.form.fieldsDisabled.redirect = false
+          }
+          this.form.fieldsDisabled.icon = false
+          this.form.fieldsDisabled.display = false
         } else {
-          this.form.fieldsDisabled.component = false
-          this.form.fieldsDisabled.redirect = false
+          this.form.fields.redirect = ''
+          this.form.fields.icon = ''
+          this.form.fields.display = 0
+
+          this.form.fieldsDisabled.redirect = true
+          this.form.fieldsDisabled.icon = true
+          this.form.fieldsDisabled.display = true
         }
-      }
+      },
+      deep: true
     }
   },
   created() {
