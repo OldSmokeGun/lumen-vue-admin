@@ -103,7 +103,7 @@ export default {
 
           if (response.data.code === 'OK') {
             this.resetPasswordForm.formIsVisible = false
-            logout(getToken())
+            logout(getToken()).catch(e => {})
           }
         }).catch(e => {
           this.resetPasswordForm.formBtnLoading = false
