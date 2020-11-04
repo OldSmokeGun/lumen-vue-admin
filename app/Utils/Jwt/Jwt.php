@@ -6,17 +6,50 @@ use oldSmokeGun\Jwt\Exception;
 
 class Jwt
 {
-    private $sec    = 'TaxCmkbXFfTKHA+OA2FkTMa32hApdhNyVNve345VN8E=>';
-    private $alg    = 'MD5';
-    private $iss    = 'manager';
-    private $sub    = 'auth_token';
-    private $aud    = 'app';
-    private $jti    = '';
-    private $expire = 86400 * 7;
+    /**
+     * @var string
+     */
+    private $sec;
+
+    /**
+     * @var string
+     */
+    private $alg;
+
+    /**
+     * @var string
+     */
+    private $iss;
+
+    /**
+     * @var string
+     */
+    private $sub;
+
+    /**
+     * @var string
+     */
+    private $aud;
+
+    /**
+     * @var string
+     */
+    private $jti;
+
+    /**
+     * @var float|int
+     */
+    private $expire;
 
     public function __construct()
     {
-        $this->setJti(md5(microtime().uniqid()));
+        $this->setSec(config('internal.jwt.sec'));
+        $this->setAlg(config('internal.jwt.alg'));
+        $this->setIss(config('internal.jwt.iss'));
+        $this->setSub(config('internal.jwt.sub'));
+        $this->setAud(config('internal.jwt.aud'));
+        $this->setJti(config('internal.jwt.jti'));
+        $this->setExpire(config('internal.jwt.expire'));
     }
 
     /**
@@ -51,8 +84,7 @@ class Jwt
      */
     public function decode(string $token)
     {
-        try
-        {
+        try {
             $jwt = new \oldSmokeGun\Jwt\Jwt();
 
             $result = $jwt
@@ -64,7 +96,6 @@ class Jwt
         } catch (\Exception $e) {
 
             return null;
-
         }
     }
 
@@ -94,7 +125,7 @@ class Jwt
      *
      * @return Jwt
      */
-    public function setSec( string $sec ): Jwt
+    public function setSec(string $sec): Jwt
     {
         $this->sec = $sec;
         return $this;
@@ -113,7 +144,7 @@ class Jwt
      *
      * @return Jwt
      */
-    public function setAlg( string $alg ): Jwt
+    public function setAlg(string $alg): Jwt
     {
         $this->alg = $alg;
         return $this;
@@ -132,7 +163,7 @@ class Jwt
      *
      * @return Jwt
      */
-    public function setIss( string $iss ): Jwt
+    public function setIss(string $iss): Jwt
     {
         $this->iss = $iss;
         return $this;
@@ -151,7 +182,7 @@ class Jwt
      *
      * @return Jwt
      */
-    public function setSub( string $sub ): Jwt
+    public function setSub(string $sub): Jwt
     {
         $this->sub = $sub;
         return $this;
@@ -170,7 +201,7 @@ class Jwt
      *
      * @return Jwt
      */
-    public function setAud( string $aud ): Jwt
+    public function setAud(string $aud): Jwt
     {
         $this->aud = $aud;
         return $this;
@@ -189,7 +220,7 @@ class Jwt
      *
      * @return Jwt
      */
-    public function setJti( string $jti ): Jwt
+    public function setJti(string $jti): Jwt
     {
         $this->jti = $jti;
         return $this;
@@ -208,7 +239,7 @@ class Jwt
      *
      * @return Jwt
      */
-    public function setExpire( $expire ): Jwt
+    public function setExpire($expire): Jwt
     {
         $this->expire = $expire;
         return $this;
