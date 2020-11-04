@@ -92,15 +92,21 @@ export default {
       this.$refs.resetPasswordForm.validate(valid => {
         if (!valid) return false
 
+        this.resetPasswordForm.formBtnLoading = true
+
         updatePassword({
           token: getToken(),
           old_password: this.resetPasswordForm.fields.old_password,
           new_password: this.resetPasswordForm.fields.new_password
         }).then(response => {
+          this.resetPasswordForm.formBtnLoading = false
+
           if (response.data.code === 'OK') {
             this.resetPasswordForm.formIsVisible = false
             logout(getToken())
           }
+        }).catch(e => {
+          this.resetPasswordForm.formBtnLoading = false
         })
       })
     }
