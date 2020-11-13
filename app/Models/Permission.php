@@ -14,9 +14,6 @@ class Permission extends Model
     protected $table      = 'permissions';
     protected $dateFormat = 'U';
 
-    const CREATED_AT = 'create_time';
-    const UPDATED_AT = 'update_time';
-
     public function getLftName()
     {
         return 'lft';
@@ -32,14 +29,14 @@ class Permission extends Model
         return 'parent_id';
     }
 
-    public function getCreateTimeAttribute()
+    public function getCreatedAtAttribute()
     {
-        return date('Y-m-d H:i:s', $this->attributes['create_time']);
+        return date('Y-m-d H:i:s', $this->attributes['created_at']);
     }
 
-    public function getUpdateTimeAttribute()
+    public function getUpdatedAtAttribute()
     {
-        return date('Y-m-d H:i:s', $this->attributes['update_time']);
+        return date('Y-m-d H:i:s', $this->attributes['updated_at']);
     }
 
     /**

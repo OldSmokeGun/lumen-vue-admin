@@ -16,7 +16,7 @@ class PermissionsSeeder extends Seeder
             'sort'           => 0,
             'status'         => 1,
             'display'        => 1,
-            'create_time'    => time(),
+            'created_at'     => time(),
             'children'       => [
                 [
                     'identification' => '/system/admins',
@@ -28,7 +28,7 @@ class PermissionsSeeder extends Seeder
                     'sort'           => 0,
                     'status'         => 1,
                     'display'        => 1,
-                    'create_time'    => time(),
+                    'created_at'     => time(),
                     'children'       => [
                         [
                             'identification' => '/api/admins',
@@ -39,7 +39,7 @@ class PermissionsSeeder extends Seeder
                             'type'           => 1,
                             'status'         => 1,
                             'display'        => 0,
-                            'create_time'    => time(),
+                            'created_at'     => time(),
                         ],
                         [
                             'identification' => '/api/admins/create',
@@ -50,7 +50,7 @@ class PermissionsSeeder extends Seeder
                             'type'           => 1,
                             'status'         => 1,
                             'display'        => 0,
-                            'create_time'    => time(),
+                            'created_at'     => time(),
                         ],
                         [
                             'identification' => '/api/admins/update',
@@ -61,7 +61,7 @@ class PermissionsSeeder extends Seeder
                             'type'           => 1,
                             'status'         => 1,
                             'display'        => 0,
-                            'create_time'    => time(),
+                            'created_at'     => time(),
                         ],
                         [
                             'identification' => '/api/admins/delete',
@@ -72,7 +72,7 @@ class PermissionsSeeder extends Seeder
                             'type'           => 1,
                             'status'         => 1,
                             'display'        => 0,
-                            'create_time'    => time(),
+                            'created_at'     => time(),
                         ],
                         [
                             'identification' => '/api/admins/reset-password',
@@ -83,7 +83,7 @@ class PermissionsSeeder extends Seeder
                             'type'           => 1,
                             'status'         => 1,
                             'display'        => 0,
-                            'create_time'    => time(),
+                            'created_at'     => time(),
                         ],
                     ]
                 ],
@@ -97,7 +97,7 @@ class PermissionsSeeder extends Seeder
                     'sort'           => 1,
                     'status'         => 1,
                     'display'        => 1,
-                    'create_time'    => time(),
+                    'created_at'     => time(),
                     'children'       => [
                         [
                             'identification' => '/api/roles',
@@ -108,7 +108,7 @@ class PermissionsSeeder extends Seeder
                             'type'           => 1,
                             'status'         => 1,
                             'display'        => 0,
-                            'create_time'    => time(),
+                            'created_at'     => time(),
                         ],
                         [
                             'identification' => '/api/roles/create',
@@ -119,7 +119,7 @@ class PermissionsSeeder extends Seeder
                             'type'           => 1,
                             'status'         => 1,
                             'display'        => 0,
-                            'create_time'    => time(),
+                            'created_at'     => time(),
                         ],
                         [
                             'identification' => '/api/roles/update',
@@ -130,7 +130,7 @@ class PermissionsSeeder extends Seeder
                             'type'           => 1,
                             'status'         => 1,
                             'display'        => 0,
-                            'create_time'    => time(),
+                            'created_at'     => time(),
                         ],
                         [
                             'identification' => '/api/roles/delete',
@@ -141,7 +141,7 @@ class PermissionsSeeder extends Seeder
                             'type'           => 1,
                             'status'         => 1,
                             'display'        => 0,
-                            'create_time'    => time(),
+                            'created_at'     => time(),
                         ],
                     ]
                 ],
@@ -155,7 +155,7 @@ class PermissionsSeeder extends Seeder
                     'sort'           => 2,
                     'status'         => 1,
                     'display'        => 1,
-                    'create_time'    => time(),
+                    'created_at'     => time(),
                     'children'       => [
                         [
                             'identification' => '/api/permissions',
@@ -166,7 +166,7 @@ class PermissionsSeeder extends Seeder
                             'type'           => 1,
                             'status'         => 1,
                             'display'        => 0,
-                            'create_time'    => time(),
+                            'created_at'     => time(),
                         ],
                         [
                             'identification' => '/api/permissions/create',
@@ -177,7 +177,7 @@ class PermissionsSeeder extends Seeder
                             'type'           => 1,
                             'status'         => 1,
                             'display'        => 0,
-                            'create_time'    => time(),
+                            'created_at'     => time(),
                         ],
                         [
                             'identification' => '/api/permissions/update',
@@ -188,7 +188,7 @@ class PermissionsSeeder extends Seeder
                             'type'           => 1,
                             'status'         => 1,
                             'display'        => 0,
-                            'create_time'    => time(),
+                            'created_at'     => time(),
                         ],
                         [
                             'identification' => '/api/permissions/delete',
@@ -199,7 +199,7 @@ class PermissionsSeeder extends Seeder
                             'type'           => 1,
                             'status'         => 1,
                             'display'        => 0,
-                            'create_time'    => time(),
+                            'created_at'     => time(),
                         ],
                     ]
                 ],

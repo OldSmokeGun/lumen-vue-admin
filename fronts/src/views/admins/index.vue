@@ -58,13 +58,13 @@
           <template slot-scope="scope">
             <el-form label-position="left" inline class="admin-table-expand">
               <el-form-item label="创建时间">
-                <span>{{ scope.row.create_time }}</span>
+                <span>{{ scope.row.created_at }}</span>
               </el-form-item>
               <el-form-item label="修改时间">
-                <span>{{ scope.row.update_time }}</span>
+                <span>{{ scope.row.updated_at }}</span>
               </el-form-item>
               <el-form-item label="最后登陆时间">
-                <span>{{ scope.row.last_login_time }}</span>
+                <span>{{ scope.row.last_login_at }}</span>
               </el-form-item>
               <el-form-item label="最后登陆 IP">
                 <span>{{ scope.row.last_login_ip }}</span>

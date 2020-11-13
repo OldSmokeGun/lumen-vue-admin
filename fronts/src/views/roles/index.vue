@@ -47,8 +47,8 @@
             <el-tag :type="scope.row.status | statusFilter">{{ scope.row.status ? '启用' : '禁用' }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="创建时间" prop="create_time" align="center" sortable />
-        <el-table-column label="修改时间" prop="update_time" align="center" sortable />
+        <el-table-column label="创建时间" prop="created_at" align="center" sortable />
+        <el-table-column label="修改时间" prop="updated_at" align="center" sortable />
         <el-table-column
           v-if="$permission(['/api/roles/edit', '/api/roles/update', '/api/roles/delete'])"
           label="操作"

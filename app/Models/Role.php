@@ -11,17 +11,14 @@ class Role extends Model
     protected $table      = 'roles';
     protected $dateFormat = 'U';
 
-    const CREATED_AT = 'create_time';
-    const UPDATED_AT = 'update_time';
-
-    public function getCreateTimeAttribute()
+    public function getCreatedAtAttribute()
     {
-        return date('Y-m-d H:i:s', $this->attributes['create_time']);
+        return date('Y-m-d H:i:s', $this->attributes['created_at']);
     }
 
-    public function getUpdateTimeAttribute()
+    public function getUpdatedAtAttribute()
     {
-        return date('Y-m-d H:i:s', $this->attributes['update_time']);
+        return date('Y-m-d H:i:s', $this->attributes['updated_at']);
     }
 
     public function permissions()
@@ -65,8 +62,8 @@ class Role extends Model
             'name',
             'description',
             'status',
-            'create_time',
-            'update_time'
+            'created_at',
+            'updated_at'
         ])
             ->when($search['name'], function ($query, $name) {
                 $query->where('name', 'like', "%{$name}%");
@@ -95,7 +92,7 @@ class Role extends Model
 
             if (!$this->save()) throw new \Exception();
 
-            $this->permissions()->attach(array_fill_keys($data['permissions'], ['create_time' => time()]));
+            $this->permissions()->attach(array_fill_keys($data['permissions'], ['created_at' => time()]));
 
             DB::commit();
             return true;
@@ -118,7 +115,7 @@ class Role extends Model
 
             if (!$this->save()) throw new \Exception();
 
-            isset($data['permissions']) && $this->permissions()->sync(array_fill_keys($data['permissions'], ['update_time' => time()]));
+            isset($data['permissions']) && $this->permissions()->sync(array_fill_keys($data['permissions'], ['updated_at' => time()]));
 
             DB::commit();
             return true;

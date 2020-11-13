@@ -56,7 +56,7 @@ class LoginController extends Controller
             return HttpResponse::failedResponse('账户已被禁用');
         }
 
-        $lastLoginInfo = ['last_login_time' => time(), 'last_login_ip' => $request->ip()];
+        $lastLoginInfo = ['last_login_at' => time(), 'last_login_ip' => $request->ip()];
 
         if (!$admin->setLastLogin($lastLoginInfo)) {
             return HttpResponse::failedResponse('登陆出错');

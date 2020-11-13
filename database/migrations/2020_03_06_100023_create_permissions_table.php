@@ -29,8 +29,8 @@ class CreatePermissionsTable extends Migration
             $table->integer('rgt')->nullable(false)->default(0)->comment('右值');
             $table->tinyInteger('status')->nullable(false)->default(1)->comment('是否可用（ 1 是 0 否 ）');
             $table->tinyInteger('display')->nullable(false)->default(1)->comment('是否显示（ 1 是 0 否 ）（ 仅对页面路由有效 ）');
-            $table->bigInteger('create_time')->nullable(false)->default(0);
-            $table->bigInteger('update_time')->nullable(false)->default(0);
+            $table->integer('created_at')->nullable(false)->default(0);
+            $table->integer('updated_at')->nullable(false)->default(0);
             $table->unique('identification');
             $table->index('title');
             $table->index('type');
@@ -40,8 +40,8 @@ class CreatePermissionsTable extends Migration
             $table->index('rgt');
             $table->index('status');
             $table->index('display');
-            $table->index('create_time');
-            $table->index('update_time');
+            $table->index('created_at');
+            $table->index('updated_at');
             $table->charset = 'utf8mb4';
             $table->engine = 'InnoDB';
         });

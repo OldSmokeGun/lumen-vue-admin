@@ -15,22 +15,19 @@ class Admin extends Model
     protected $table      = 'admins';
     protected $dateFormat = 'U';
 
-    const CREATED_AT = 'create_time';
-    const UPDATED_AT = 'update_time';
-
-    public function getLastLoginTimeAttribute()
+    public function getLastLoginAtAttribute()
     {
-        return date('Y-m-d H:i:s', $this->attributes['last_login_time']);
+        return date('Y-m-d H:i:s', $this->attributes['last_login_at']);
     }
 
-    public function getCreateTimeAttribute()
+    public function getCreatedAtAttribute()
     {
-        return date('Y-m-d H:i:s', $this->attributes['create_time']);
+        return date('Y-m-d H:i:s', $this->attributes['created_at']);
     }
 
-    public function getUpdateTimeAttribute()
+    public function getUpdatedAtAttribute()
     {
-        return date('Y-m-d H:i:s', $this->attributes['update_time']);
+        return date('Y-m-d H:i:s', $this->attributes['updated_at']);
     }
 
     public function roles()
@@ -72,10 +69,10 @@ class Admin extends Model
                 'avatar',
                 'email',
                 'status',
-                'last_login_time',
+                'last_login_at',
                 'last_login_ip',
-                'create_time',
-                'update_time'
+                'created_at',
+                'updated_at'
             ])
             ->when($search['username'], function ($query, $username) {
                 $query->where('username', 'like', "%{$username}%");
@@ -107,7 +104,7 @@ class Admin extends Model
             'nickname',
             'avatar',
             'email',
-            'last_login_time',
+            'last_login_at',
             'last_login_ip',
         ];
 
@@ -235,7 +232,7 @@ class Admin extends Model
 
             if (!$this->save()) throw new \Exception();
 
-            $this->roles()->attach(array_fill_keys($data['roles'], ['create_time' => time()]));
+            $this->roles()->attach(array_fill_keys($data['roles'], ['created_at' => time()]));
 
             DB::commit();
             return true;
@@ -260,13 +257,13 @@ class Admin extends Model
 
             if (!$this->save()) throw new \Exception();
 
-            isset($data['roles']) && $this->roles()->sync(array_fill_keys($data['roles'], ['update_time' => time()]));
+            isset($data['roles']) && $this->roles()->sync(array_fill_keys($data['roles'], ['updated_at' => time()]));
 
             DB::commit();
             return true;
 
         } catch (\Exception $exception) {
-
+            dd($exception->getMessage());
             DB::rollBack();
             return false;
         }
@@ -309,7 +306,7 @@ class Admin extends Model
 
     public function setLastLogin(array $lostLoginInfo): bool
     {
-        $this->last_login_time = $lostLoginInfo['last_login_time'];
+        $this->last_login_at = $lostLoginInfo['last_login_at'];
         $this->last_login_ip   = $lostLoginInfo['last_login_ip'];
         return $this->save();
     }

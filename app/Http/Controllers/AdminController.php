@@ -97,7 +97,7 @@ class AdminController extends Controller
                 'nickname'        => $admin['nickname'],
                 'avatar'          => $admin['avatar'],
                 'email'           => $admin['email'],
-                'last_login_date' => $admin['last_login_time'],
+                'last_login_date' => $admin['last_login_at'],
                 'last_login_ip'   => $admin['last_login_ip'],
                 'permission_maps' => $admin['permission_maps']
             ];
