@@ -19,8 +19,8 @@ class CreateAdminsRolesTable extends Migration
             $table->increments('id');
             $table->integer('admin_id')->nullable(false)->default(0)->comment('用户 id');
             $table->integer('role_id')->nullable(false)->default(0)->comment('角色 id');
-            $table->integer('created_at')->nullable(false)->default(0);
-            $table->integer('updated_at')->nullable(false)->default(0);
+            $table->integer('created_at')->nullable(true);
+            $table->integer('updated_at')->nullable(true);
             $table->index('admin_id');
             $table->index('role_id');
             $table->index('created_at');

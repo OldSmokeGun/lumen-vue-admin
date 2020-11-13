@@ -29,8 +29,8 @@ class CreatePermissionsTable extends Migration
             $table->integer('rgt')->nullable(false)->default(0)->comment('右值');
             $table->tinyInteger('status')->nullable(false)->default(1)->comment('是否可用（ 1 是 0 否 ）');
             $table->tinyInteger('display')->nullable(false)->default(1)->comment('是否显示（ 1 是 0 否 ）（ 仅对页面路由有效 ）');
-            $table->integer('created_at')->nullable(false)->default(0);
-            $table->integer('updated_at')->nullable(false)->default(0);
+            $table->integer('created_at')->nullable(true);
+            $table->integer('updated_at')->nullable(true);
             $table->unique('identification');
             $table->index('title');
             $table->index('type');

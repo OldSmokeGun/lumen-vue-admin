@@ -20,8 +20,8 @@ class CreateRolesTable extends Migration
             $table->string('name', 32)->nullable(false)->default('')->comment('角色名称');
             $table->string('description', 255)->nullable(false)->default('')->comment('角色描述');
             $table->tinyInteger('status')->nullable(false)->default(1)->comment('是否可用（ 1 是 0 否 ）');
-            $table->integer('created_at')->nullable(false)->default(0);
-            $table->integer('updated_at')->nullable(false)->default(0);
+            $table->integer('created_at')->nullable(true);
+            $table->integer('updated_at')->nullable(true);
             $table->unique('name');
             $table->index('status');
             $table->index('created_at');

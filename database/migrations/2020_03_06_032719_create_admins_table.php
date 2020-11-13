@@ -26,8 +26,8 @@ class CreateAdminsTable extends Migration
             $table->tinyInteger('status')->nullable(false)->default(1)->comment('是否可用（ 1 是 0 否 ）');
             $table->integer('last_login_at')->nullable(false)->default(0)->comment('最后登陆时间');
             $table->string('last_login_ip', 36)->nullable(false)->default(0)->comment('最后登陆 IP');
-            $table->integer('created_at')->nullable(false)->default(0);
-            $table->integer('updated_at')->nullable(false)->default(0);
+            $table->integer('created_at')->nullable(true);
+            $table->integer('updated_at')->nullable(true);
             $table->unique('username');
             $table->index('nickname');
             $table->index('email');
