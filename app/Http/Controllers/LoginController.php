@@ -89,13 +89,7 @@ class LoginController extends Controller
      */
     public function logout(Request $request)
     {
-        $token = strval($request->input('token', ''));
-
-        if (!$token) {
-            return HttpResponse::failedResponse(HttpResponseCode::ILLEGAL_REQUEST_CODE_MESSAGE, HttpResponseCode::ILLEGAL_REQUEST_CODE);
-        }
-
-        $admin = (new AdminModel())->findByToken($token);
+        $admin = $request->admin;
 
         if (!$admin) {
             return HttpResponse::failedResponse(HttpResponseCode::LOGIN_INVALID_CODE_MESSAGE, HttpResponseCode::LOGIN_INVALID_CODE);

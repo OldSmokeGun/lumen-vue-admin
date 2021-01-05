@@ -96,26 +96,14 @@ class Admin extends Model
         return $admins->toArray();
     }
 
-    public function getAdminPermissionsByToken(string $token): ?array
+    public function getAdminPermissions(): ?array
     {
-        $fields = [
-            'id',
-            'username',
-            'nickname',
-            'avatar',
-            'email',
-            'last_login_at',
-            'last_login_ip',
-        ];
-
-        $admin = $this->select($fields)->where(['token' => $token])->first();
-
-        if (!$admin) return [];
+        if (!$this) return [];
 
         $permissionModel = new PermissionModel();
         $permissionTable = $permissionModel->getTable();
 
-        if ((int)$admin->id === 1) {
+        if ((int)$this->id === 1) {
             $permissionQuery = $permissionModel
                 ->select([
                     "{$permissionTable}.id",
@@ -135,19 +123,17 @@ class Admin extends Model
             $routePermissions = $permissionQuery->where("{$permissionTable}.type", '=', 0)->get()->toTree()->toArray();
             $otherPermissions = $otherPermissionQuery->get()->toArray();
 
-            $admin->permission_maps = [
+            return [
                 'routes' => $routePermissions,
                 'maps'   => $otherPermissions
             ];
-
-            return $admin->toArray();
         }
 
         // 查询权限表
         $roleModel = new RoleModel();
         $roleTable = $roleModel->getTable();
 
-        $roles = $admin->roles()->select(["{$roleTable}.id"])->where("{$roleTable}.status", "=", 1)->get()->toArray();
+        $roles = $this->roles()->select(["{$roleTable}.id"])->where("{$roleTable}.status", "=", 1)->get()->toArray();
 
         $rolePermissionModel      = new RolePermissionModel();
         $rolePermissionModelTable = $rolePermissionModel->getTable();
@@ -180,12 +166,10 @@ class Admin extends Model
         $routePermissions = $permissionQuery->where("{$permissionTable}.type", '=', 0)->get()->toTree()->toArray();
         $otherPermissions = $otherPermissionQuery->get()->toArray();
 
-        $admin->permission_maps = [
+        return [
             'routes' => $routePermissions,
             'maps'   => $otherPermissions
         ];
-
-        return $admin->toArray();
     }
 
     public function hasAdminPermissionByToken(string $token, string $permission): bool
@@ -307,7 +291,7 @@ class Admin extends Model
     public function setLastLogin(array $lostLoginInfo): bool
     {
         $this->last_login_at = $lostLoginInfo['last_login_at'];
-        $this->last_login_ip   = $lostLoginInfo['last_login_ip'];
+        $this->last_login_ip = $lostLoginInfo['last_login_ip'];
         return $this->save();
     }
 

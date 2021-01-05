@@ -24,6 +24,7 @@ class AuthCheck
     public function handle($request, Closure $next)
     {
         $pathInfo = $request->getPathInfo();
+        $admin    = null;
 
         if (!in_array($pathInfo, $this->whiteList)) {
             $token = $request->header('Authorization');
@@ -52,6 +53,8 @@ class AuthCheck
                 return HttpResponse::failedResponse(HttpResponseCode::LOGIN_INVALID_CODE_MESSAGE, HttpResponseCode::LOGIN_INVALID_CODE);
             }
         }
+
+        $request->admin = $admin;
 
         return $next($request);
     }

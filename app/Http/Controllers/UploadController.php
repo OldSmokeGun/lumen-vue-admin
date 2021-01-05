@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 class UploadController extends Controller
 {
     /**
-     * 管理员头像上传
+     * 单文件上传
      *
      * @param Request $request
      * @return mixed

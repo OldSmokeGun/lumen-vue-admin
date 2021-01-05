@@ -29,8 +29,7 @@ class PermissionCheck
         $pathInfo = $request->getPathInfo();
 
         if (!in_array($pathInfo, $this->whiteList)) {
-            $token = $request->header('Authorization');
-            $admin = (new AdminModel())->findByToken($token);
+            $admin = $request->admin;
 
             if (!$admin) {
                 return HttpResponse::failedResponse(HttpResponseCode::LOGIN_INVALID_CODE_MESSAGE, HttpResponseCode::LOGIN_INVALID_CODE);

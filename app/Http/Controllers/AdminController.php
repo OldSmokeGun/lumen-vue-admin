@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Facades\HttpResponse;
 use App\Models\Admin as AdminModel;
 use App\Utils\HttpResponse\HttpResponseCode;
+use FastRoute\RouteParser\Std;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -82,28 +83,29 @@ class AdminController extends Controller
      */
     public function info(Request $request)
     {
-        $token = strval($request->input('token', ''));
+        $admin = $request->admin;
 
-        if (!$token) {
-            return HttpResponse::failedResponse(HttpResponseCode::ILLEGAL_REQUEST_CODE_MESSAGE, HttpResponseCode::ILLEGAL_REQUEST_CODE);
+        if (!$admin) {
+            return HttpResponse::failedResponse(HttpResponseCode::LOGIN_INVALID_CODE_MESSAGE, HttpResponseCode::LOGIN_INVALID_CODE);
         }
 
-        $admin = (new AdminModel())->getAdminPermissionsByToken($token);
+        $permissions = $admin->getAdminPermissions();
+        $data        = new Std();
 
-        if ($admin) {
-            $admin = [
-                'id'              => $admin['id'],
-                'username'        => $admin['username'],
-                'nickname'        => $admin['nickname'],
-                'avatar'          => $admin['avatar'],
-                'email'           => $admin['email'],
-                'last_login_date' => $admin['last_login_at'],
-                'last_login_ip'   => $admin['last_login_ip'],
-                'permission_maps' => $admin['permission_maps']
+        if ($permissions) {
+            $data = [
+                'id'              => $admin->id,
+                'username'        => $admin->username,
+                'nickname'        => $admin->nickname,
+                'avatar'          => $admin->avatar,
+                'email'           => $admin->email,
+                'last_login_at' => $admin->last_login_at,
+                'last_login_ip'   => $admin->last_login_ip,
+                'permission_maps' => $permissions
             ];
         }
 
-        return HttpResponse::successResponse($admin);
+        return HttpResponse::successResponse($data);
     }
 
     /**
@@ -245,13 +247,8 @@ class AdminController extends Controller
 
     public function updatePassword(Request $request)
     {
-        $token = strval($request->input('token', ''));
+        $admin = $request->admin;
 
-        if (!$token) {
-            return HttpResponse::failedResponse(HttpResponseCode::ILLEGAL_REQUEST_CODE_MESSAGE, HttpResponseCode::ILLEGAL_REQUEST_CODE);
-        }
-
-        $admin = (new AdminModel())->findByToken($token);
         if (!$admin) {
             return HttpResponse::failedResponse(HttpResponseCode::LOGIN_INVALID_CODE_MESSAGE, HttpResponseCode::LOGIN_INVALID_CODE);
         }
